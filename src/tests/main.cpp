@@ -1,7 +1,7 @@
-#include <prefix_scan.h>
+#include <gtest/gtest.h>
 
-int main()
+int main(int argc, char **argv)
 {
-    glsl_block_prefix_scan(0,0,0,0,0);
-    return 0;
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

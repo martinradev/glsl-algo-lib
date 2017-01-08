@@ -24,5 +24,4 @@ void get_ssbo_data(GLuint ssbo, unsigned n, T *data)
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
-
 #endif // GL_SETUP_HPP

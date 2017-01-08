@@ -18,8 +18,7 @@ void get_ssbo_data(GLuint ssbo, unsigned n, T *data)
     assert(bufferData != NULL);
     for (unsigned i = 0u; i < n; ++i)
     {
-        *data = *bufferData;
-        ++bufferData;
+        data[i] = bufferData[i];
     }
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);

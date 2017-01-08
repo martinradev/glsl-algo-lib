@@ -36,14 +36,17 @@ radix_sort.o: $(GLSL_ALGO_DIR)/radix_sort.c
 	$(CC) $(CFLAGS) $(GLSL_ALGO_DIR)/radix_sort.c -o $(OUTPUT_DIR)/radix_sort.o
 
 #tests
-test: build gtest glfw glad test_main.o prefix_scan_tests.o gl_setup.o
-	$(CCP) -o $(OUTPUT_DIR)/test_main $(OUTPUT_DIR)/test_main.o $(OUTPUT_DIR)/prefix_scan_tests.o $(OUTPUT_DIR)/gl_setup.o -L$(OUTPUT_DIR) -lglslalgo -lgtest -pthread -lglfw3 -lX11 -ldl -lXrandr -lXi -lXinerama -lXcursor -lGL -lglad
+test: build gtest glfw glad test_main.o prefix_scan_tests.o util_tests.o gl_setup.o
+	$(CCP) -o $(OUTPUT_DIR)/test_main $(OUTPUT_DIR)/test_main.o $(OUTPUT_DIR)/prefix_scan_tests.o $(OUTPUT_DIR)/util_tests.o $(OUTPUT_DIR)/gl_setup.o -L$(OUTPUT_DIR) -lglslalgo -lgtest -pthread -lglfw3 -lX11 -ldl -lXrandr -lXi -lXinerama -lXcursor -lGL -lglad
 
 test_main.o: $(TEST_DIR)/main.cpp
 	$(CCP) $(CPPFLAGS) $(TEST_INCLUDE_PATHS) $(TEST_DIR)/main.cpp -o $(OUTPUT_DIR)/test_main.o
 
 prefix_scan_tests.o: $(TEST_DIR)/prefix_scan_tests.cpp
 	$(CCP) $(CPPFLAGS) $(TEST_INCLUDE_PATHS) $(TEST_DIR)/prefix_scan_tests.cpp -o $(OUTPUT_DIR)/prefix_scan_tests.o
+
+util_tests.o: $(TEST_DIR)/util_tests.cpp
+	$(CCP) $(CPPFLAGS) $(TEST_INCLUDE_PATHS) $(TEST_DIR)/util_tests.cpp -o $(OUTPUT_DIR)/util_tests.o
 
 gtest:
 	cd $(GTEST_DIR)/googletest/ && mkdir -p out && cd out && cmake ../ && make

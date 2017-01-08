@@ -24,10 +24,26 @@ int init_window_and_gl_context()
     }
     glfwMakeContextCurrent(window);
     
+    if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress))
+    {
+        fprintf(stderr, "ERROR: Failed to initialize OpenGL context");
+        return 1;
+    }
+    
     return 0;
 }
 
 void destroy_window_and_gl_context()
 {
     glfwTerminate();
+}
+
+GLuint create_ssbo(unsigned n, void *data)
+{
+    GLuint buffer;
+    glGenBuffers(1, &buffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(int)*n, data, GL_STATIC_DRAW);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    return buffer;
 }

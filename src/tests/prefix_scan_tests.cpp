@@ -1,7 +1,7 @@
+#include "gl_setup.hpp"
+
 #include <prefix_scan.h>
 #include <gtest/gtest.h>
-
-#include "gl_setup.hpp"
 
 class PrefixScanTest : public ::testing::Test
 {

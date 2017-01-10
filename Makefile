@@ -6,7 +6,7 @@ GTEST_DIR=dependencies/googletest
 GLFW_DIR=dependencies/glfw
 GLAD_DIR=dependencies/glad
 CPPFLAGS=-c -Wall -Werror -std=c++11
-TEST_INCLUDE_PATHS=-Isrc/glsl_algo/ -I$(GTEST_DIR)/googletest/include -I$(GLFW_DIR)/include -I$(GLAD_DIR)/out/include -I$(COMMON_DIR)
+TEST_INCLUDE_PATHS=-Isrc/ -I$(GTEST_DIR)/googletest/include -I$(GLFW_DIR)/include -I$(GLAD_DIR)/out/include -I$(COMMON_DIR)
 GLSL_ALGO_DIR=src/glsl_algo
 TEST_DIR=src/tests
 COMMON_DIR=src/common
@@ -26,14 +26,20 @@ configure:
 build: configure create_out_dir libglslalgo.a
 
 #library
-libglslalgo.a: prefix_scan.o radix_sort.o
-	$(AR) $(OUTPUT_DIR)/libglslalgo.a $(OUTPUT_DIR)/prefix_scan.o $(OUTPUT_DIR)/radix_sort.o
+libglslalgo.a: prefix_scan.o radix_sort.o reduce.o init.o
+	$(AR) $(OUTPUT_DIR)/libglslalgo.a $(OUTPUT_DIR)/prefix_scan.o $(OUTPUT_DIR)/radix_sort.o $(OUTPUT_DIR)/reduce.o $(OUTPUT_DIR)/init.o
 	
 prefix_scan.o: $(GLSL_ALGO_DIR)/prefix_scan.c
 	$(CC) $(CFLAGS) $(GLSL_ALGO_DIR)/prefix_scan.c -o $(OUTPUT_DIR)/prefix_scan.o
 	
 radix_sort.o: $(GLSL_ALGO_DIR)/radix_sort.c
 	$(CC) $(CFLAGS) $(GLSL_ALGO_DIR)/radix_sort.c -o $(OUTPUT_DIR)/radix_sort.o
+
+reduce.o: $(GLSL_ALGO_DIR)/shaders/reduce.c
+	$(CC) $(CFLAGS) $(GLSL_ALGO_DIR)/shaders/reduce.c -o $(OUTPUT_DIR)/reduce.o
+
+init.o: $(GLSL_ALGO_DIR)/init.c
+	$(CC) $(CFLAGS) -Idependencies $(GLSL_ALGO_DIR)/init.c -o $(OUTPUT_DIR)/init.o
 
 #tests
 test: build gtest glfw glad test_main.o prefix_scan_tests.o util_tests.o gl_setup.o
@@ -54,7 +60,7 @@ gtest:
 
 #common
 gl_setup.o: $(COMMON_DIR)/gl_setup.cpp
-	$(CCP) $(CPPFLAGS) -I$(GLFW_DIR)/include -I$(GLAD_DIR)/out/include $(COMMON_DIR)/gl_setup.cpp -o $(OUTPUT_DIR)/gl_setup.o
+	$(CCP) $(CPPFLAGS) -Isrc/ -I$(GLFW_DIR)/include -I$(GLAD_DIR)/out/include $(COMMON_DIR)/gl_setup.cpp -o $(OUTPUT_DIR)/gl_setup.o
 
 glfw:
 	cd $(GLFW_DIR)/ && mkdir -p out && cd out && cmake ../ && make

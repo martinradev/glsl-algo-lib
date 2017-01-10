@@ -4,9 +4,6 @@
 // Warp size for the device.
 #define WARP_SIZE $(WARP_SIZE)
 
-// Number of threads running every clock per processor.
-#define CORES $(CORES)
-
 // Best read/write size.
 #define VECTOR_SIZE $(VECTOR_SIZE)
 

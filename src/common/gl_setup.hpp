@@ -2,8 +2,9 @@
 #define GL_SETUP_HPP
 
 #include <glad/glad.h>
-
 #include <cassert>
+
+#include <glsl_algo/init.h>
 
 int init_window_and_gl_context();
 void destroy_window_and_gl_context();

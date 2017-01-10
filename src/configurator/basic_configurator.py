@@ -3,7 +3,6 @@
 import os
 
 warpSize = 32
-cores = 384
 vectorSize = 4
 scanReduceBlockSize = 1024
 scanBlockBlockSize = 1024
@@ -13,7 +12,6 @@ base = os.path.dirname(__file__)
 fileHandle = open(base + "/../glsl_algo/config_orig.h", "r")
 fileContent = fileHandle.read()
 fileContent = fileContent.replace("$(WARP_SIZE)", str(warpSize))
-fileContent = fileContent.replace("$(CORES)", str(cores))
 fileContent = fileContent.replace("$(VECTOR_SIZE)", str(vectorSize))
 fileContent = fileContent.replace("$(SCAN_REDUCE_THREAD_BLOCK_SIZE)", str(scanReduceBlockSize))
 fileContent = fileContent.replace("$(SCAN_BLOCKS_THREAD_BLOCK_SIZE)", str(scanBlockBlockSize))

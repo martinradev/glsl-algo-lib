@@ -15,6 +15,7 @@ protected:
     {
         destroy_window_and_gl_context();
     }
+private:
 };
 
 TEST_F(UtilTest, TestSmallSSBO)

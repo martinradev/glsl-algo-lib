@@ -4,9 +4,6 @@
 // Warp size for the device.
 #define WARP_SIZE 32
 
-// Number of threads running every clock per processor.
-#define CORES 384
-
 // Best read/write size.
 #define VECTOR_SIZE 4
 

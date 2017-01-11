@@ -26,8 +26,8 @@ configure:
 build: configure create_out_dir libglslalgo.a
 
 #library
-libglslalgo.a: prefix_scan.o radix_sort.o reduce.o init.o
-	$(AR) $(OUTPUT_DIR)/libglslalgo.a $(OUTPUT_DIR)/prefix_scan.o $(OUTPUT_DIR)/radix_sort.o $(OUTPUT_DIR)/reduce.o $(OUTPUT_DIR)/init.o
+libglslalgo.a: prefix_scan.o radix_sort.o reduce.o init.o scan.o
+	$(AR) $(OUTPUT_DIR)/libglslalgo.a $(OUTPUT_DIR)/prefix_scan.o $(OUTPUT_DIR)/radix_sort.o $(OUTPUT_DIR)/reduce.o $(OUTPUT_DIR)/scan.o $(OUTPUT_DIR)/init.o
 	
 prefix_scan.o: $(GLSL_ALGO_DIR)/prefix_scan.c
 	$(CC) $(CFLAGS) $(GLSL_ALGO_DIR)/prefix_scan.c -o $(OUTPUT_DIR)/prefix_scan.o
@@ -37,6 +37,9 @@ radix_sort.o: $(GLSL_ALGO_DIR)/radix_sort.c
 
 reduce.o: $(GLSL_ALGO_DIR)/shaders/reduce.c
 	$(CC) $(CFLAGS) $(GLSL_ALGO_DIR)/shaders/reduce.c -o $(OUTPUT_DIR)/reduce.o
+
+scan.o: $(GLSL_ALGO_DIR)/shaders/scan.c
+	$(CC) $(CFLAGS) $(GLSL_ALGO_DIR)/shaders/scan.c -o $(OUTPUT_DIR)/scan.o
 
 init.o: $(GLSL_ALGO_DIR)/init.c
 	$(CC) $(CFLAGS) -Idependencies $(GLSL_ALGO_DIR)/init.c -o $(OUTPUT_DIR)/init.o

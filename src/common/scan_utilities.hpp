@@ -5,15 +5,22 @@
 #include <vector>
 
 template<typename T>
-void scan(const T *input, T *output, unsigned n, bool isInclusive)
+void scan(const T *input, T *output, unsigned n, unsigned blockSize, bool isInclusive)
 {
-    unsigned i = 0u;
-    T tmp = isInclusive ? input[i] : static_cast<T>(0);
+    unsigned i = 0u, k = 0u;
+    T tmp = static_cast<T>(0);
     while(i < n)
     {
+        if (k == blockSize)
+        {
+            tmp = static_cast<T>(0);
+            k = 0u;
+        }
+        if (isInclusive) tmp += input[i];
         output[i] = tmp;
-        tmp += input[i];
+        if (!isInclusive) tmp += input[i];
         ++i;
+        ++k;
     } 
 }
 

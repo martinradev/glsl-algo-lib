@@ -15,6 +15,13 @@ void glsl_local_reduce(const glsl_algo_context *ctx,
                        unsigned int num_elements,
                        unsigned int block_size);
 
+void glsl_local_scan(const glsl_algo_context *ctx,
+                       GLuint input_buffer, 
+                       GLuint output_buffer,
+                       unsigned int num_elements,
+                       unsigned int block_size,
+                       unsigned char is_inclusive);
+
 #ifdef __cplusplus
 }
 #endif

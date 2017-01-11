@@ -60,6 +60,10 @@ glsl_algo_context glsl_algo_init(glsl_algo_configuration conf)
     int shaderSourceLen = snprintf(buffer, buffer_max_size, GLSL_ALGO_LOCAL_REDUCE_SHADER_SRC, type_name, scalar_type_name, conf.local_block_size, num_elements, conf.warp_size);
     assert(shaderSourceLen >= 0 && shaderSourceLen < buffer_max_size);
     ctx.reduce_program = create_compute_program(buffer, shaderSourceLen);
+    
+    shaderSourceLen = snprintf(buffer, buffer_max_size, GLSL_ALGO_LOCAL_SCAN_SHADER_SRC, type_name, scalar_type_name, conf.local_block_size, num_elements, conf.warp_size);
+    assert(shaderSourceLen >= 0 && shaderSourceLen < buffer_max_size);
+    ctx.scan_program = create_compute_program(buffer, shaderSourceLen);
 
     free(buffer);
     

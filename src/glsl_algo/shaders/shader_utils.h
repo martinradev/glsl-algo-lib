@@ -9,10 +9,16 @@
 "#define WARP_SIZE %d\n" \
 "#if ELEMENTS_PER_THREAD == 1\n" \
 "#define SUM(v) v\n" \
+"#define SCAN(v) 0\n" \
+"#define INCLUSIVE_SCAN(v) v\n" \
 "#elif ELEMENTS_PER_THREAD == 2\n" \
 "#define SUM(v) v[0]+v[1]\n" \
+"#define SCAN(v) TYPE(0, v[0])\n" \
+"#define INCLUSIVE_SCAN(v) TYPE(v[0], v[0]+v[1])\n" \
 "#elif ELEMENTS_PER_THREAD == 4\n" \
 "#define SUM(v) v[0]+v[1]+v[2]+v[3]\n" \
+"#define SCAN(v) TYPE(0, v[0], v[0]+v[1], v[0]+v[1]+v[2])\n" \
+"#define INCLUSIVE_SCAN(v) TYPE(v[0], v[0]+v[1], v[0]+v[1]+v[2], v[0]+v[1]+v[2]+v[3])\n" \
 "#endif\n" \
 #src
 

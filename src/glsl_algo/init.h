@@ -19,6 +19,7 @@ extern "C"{
 #endif
 
 extern const char *const GLSL_ALGO_LOCAL_REDUCE_SHADER_SRC;
+extern const char *const GLSL_ALGO_LOCAL_SCAN_SHADER_SRC;
 
 typedef enum
 {
@@ -127,6 +128,7 @@ typedef struct
 {
     glsl_algo_configuration conf;
     GLuint reduce_program;
+    GLuint scan_program;
 } glsl_algo_context;
 
 glsl_algo_context glsl_algo_init(glsl_algo_configuration conf);

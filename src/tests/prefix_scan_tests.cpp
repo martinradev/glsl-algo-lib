@@ -448,3 +448,134 @@ TEST_F(PrefixScanTest, LocalScanInt4Inclusive)
     
     EXPECT_EQ(expectedResult, result);
 }
+
+TEST_F(PrefixScanTest, LocalScanSameInputAndOutputBuffers)
+{
+    glsl_algo_configuration conf = {GARWTuint4, 1024, 32};
+    glsl_algo_context ctx = glsl_algo_init(conf);
+    
+    const unsigned numBlocks = 16;
+    const unsigned typeSize = 4;
+    const unsigned blockSize = typeSize * conf.local_block_size;
+    const unsigned n = 1024 * typeSize * numBlocks;
+    std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 6u);
+    GLuint inputOutputBuffer = create_ssbo(n, vec.data());
+    glsl_local_scan(&ctx, inputOutputBuffer, inputOutputBuffer, n, blockSize, 0);
+    
+    std::vector<unsigned> expectedResult(n, 0);
+    scan(vec.data(), expectedResult.data(), n, blockSize, 0);
+    
+    std::vector<unsigned> result(n, 0);
+    get_ssbo_data(inputOutputBuffer, n, result.data());
+    
+    EXPECT_EQ(expectedResult, result);
+}
+
+TEST_F(PrefixScanTest, FullScan)
+{
+    glsl_algo_configuration conf = {GARWTint1, 1024, 32};
+    glsl_algo_context ctx = glsl_algo_init(conf);
+
+    const unsigned numBlocks = 256;
+    const unsigned n = 1024 * numBlocks;
+    std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 6u);
+    GLuint inputBuffer = create_ssbo(n, vec.data());
+    GLuint intermediateBuffer = create_ssbo(numBlocks);
+    GLuint outputBuffer = create_ssbo(n);
+    glsl_scan(&ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 0);
+    
+    std::vector<unsigned> expectedResult(n, 0);
+    scan(vec.data(), expectedResult.data(), n, n, 0);
+    
+    std::vector<unsigned> result(n, 0);
+    get_ssbo_data(outputBuffer, n, result.data());
+    
+    EXPECT_EQ(expectedResult, result);
+}
+
+TEST_F(PrefixScanTest, FullScanLarge)
+{
+    glsl_algo_configuration conf = {GARWTint1, 1024, 32};
+    glsl_algo_context ctx = glsl_algo_init(conf);
+
+    const unsigned numBlocks = 2048;
+    const unsigned n = 1024 * numBlocks;
+    std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 3u);
+    GLuint inputBuffer = create_ssbo(n, vec.data());
+    GLuint intermediateBuffer = create_ssbo(numBlocks);
+    GLuint outputBuffer = create_ssbo(n);
+    glsl_scan(&ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 0);
+    
+    std::vector<unsigned> expectedResult(n, 0);
+    scan(vec.data(), expectedResult.data(), n, n, 0);
+    
+    std::vector<unsigned> result(n, 0);
+    get_ssbo_data(outputBuffer, n, result.data());
+    
+    EXPECT_EQ(expectedResult, result);
+}
+
+TEST_F(PrefixScanTest, FullScanLargeUint4)
+{
+    glsl_algo_configuration conf = {GARWTuint4, 1024, 32};
+    glsl_algo_context ctx = glsl_algo_init(conf);
+
+    const unsigned numBlocks = 2048;
+    const unsigned n = 1024 * numBlocks;
+    std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 3u);
+    GLuint inputBuffer = create_ssbo(n, vec.data());
+    GLuint intermediateBuffer = create_ssbo(numBlocks);
+    GLuint outputBuffer = create_ssbo(n);
+    glsl_scan(&ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 0);
+    
+    std::vector<unsigned> expectedResult(n, 0);
+    scan(vec.data(), expectedResult.data(), n, n, 0);
+    
+    std::vector<unsigned> result(n, 0);
+    get_ssbo_data(outputBuffer, n, result.data());
+    
+    EXPECT_EQ(expectedResult, result);
+}
+
+TEST_F(PrefixScanTest, FullInclusiveScan)
+{
+    glsl_algo_configuration conf = {GARWTint1, 1024, 32};
+    glsl_algo_context ctx = glsl_algo_init(conf);
+
+    const unsigned numBlocks = 256;
+    const unsigned n = 1024 * numBlocks;
+    std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 3u);
+    GLuint inputBuffer = create_ssbo(n, vec.data());
+    GLuint intermediateBuffer = create_ssbo(numBlocks);
+    GLuint outputBuffer = create_ssbo(n);
+    glsl_scan(&ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 1);
+    
+    std::vector<unsigned> expectedResult(n, 0);
+    scan(vec.data(), expectedResult.data(), n, n, 1);
+    
+    std::vector<unsigned> result(n, 0);
+    get_ssbo_data(outputBuffer, n, result.data());
+    
+    EXPECT_EQ(expectedResult, result);
+}
+
+TEST_F(PrefixScanTest, FullInclusiveScanSameBuffer)
+{
+    glsl_algo_configuration conf = {GARWTint1, 1024, 32};
+    glsl_algo_context ctx = glsl_algo_init(conf);
+
+    const unsigned numBlocks = 256;
+    const unsigned n = 1024 * numBlocks;
+    std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 3u);
+    GLuint inputOutputBuffer = create_ssbo(n, vec.data());
+    GLuint intermediateBuffer = create_ssbo(numBlocks);
+    glsl_scan(&ctx, inputOutputBuffer, intermediateBuffer, inputOutputBuffer, n, 1, 1);
+    
+    std::vector<unsigned> expectedResult(n, 0);
+    scan(vec.data(), expectedResult.data(), n, n, 1);
+    
+    std::vector<unsigned> result(n, 0);
+    get_ssbo_data(inputOutputBuffer, n, result.data());
+    
+    EXPECT_EQ(expectedResult, result);
+}

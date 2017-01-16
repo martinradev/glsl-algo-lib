@@ -7,15 +7,21 @@ layout(local_size_x=BLOCK_SIZE) in;\n
 layout(location=0) uniform uint ElementsPerThread;\n
 layout(location=1) uniform uint ArraySize;\n
 layout(location=2) uniform bool IsInclusive;\n
+layout(location=3) uniform bool AddBlockOffset;\n
 
 layout(binding = 0) buffer InputArray\n
 {\n
-	restrict readonly TYPE inputArray[];\n
+	readonly TYPE inputArray[];\n
 };\n
 
 layout(binding = 1) buffer OutputArray\n
 {
-	restrict writeonly TYPE outputArray[];\n
+	coherent writeonly TYPE outputArray[];\n
+};\n
+
+layout(binding = 2) buffer BlockArray\n
+{
+	readonly SCALAR_TYPE blockArray[];\n
 };\n
 
 shared SCALAR_TYPE sharedMem[BLOCK_SIZE];\n
@@ -48,7 +54,7 @@ void main()\n
 	uint localId = gl_LocalInvocationID.x;\n
 	uint laneId = localId%WARP_SIZE;\n
 	uint warpId = localId/WARP_SIZE;\n
-	SCALAR_TYPE offset = SCALAR_TYPE(0);\n
+	SCALAR_TYPE offset = AddBlockOffset ? blockArray[gl_WorkGroupID.x] : SCALAR_TYPE(0);\n
 	for (uint i = 0; i < ElementsPerThread; ++i)\n
 	{\n
 			TYPE item = threadId >= ArraySize ? TYPE(0) : inputArray[threadId];\n

@@ -27,12 +27,12 @@ layout(binding = 2) buffer BlockArray\n
 shared SCALAR_TYPE sharedMem[BLOCK_SIZE];\n
 shared SCALAR_TYPE blockWarpScan[WARP_SIZE];\n
 
-SCALAR_TYPE warpScan(in SCALAR_TYPE value, in uint localId, in bool isExclusive)\n
+SCALAR_TYPE warpScan(in SCALAR_TYPE value, in uint localId, in bool isExclusive, in uint warpSize)\n
 {\n
 	sharedMem[localId] = value;\n
-	uint laneIndex = localId%WARP_SIZE;\n
+	uint laneIndex = localId%warpSize;\n
 	uint off = 1;\n
-	while (off < WARP_SIZE)\n
+	while (off < warpSize)\n
 	{\n
 		uint prev = localId-off;\n
 		if (off <= laneIndex)\n
@@ -59,7 +59,7 @@ void main()\n
 	{\n
 			TYPE item = threadId >= ArraySize ? TYPE(0) : inputArray[threadId];\n
 			SCALAR_TYPE val = SUM(item);\n
-			SCALAR_TYPE valueInWarp = warpScan(val, localId, false);\n
+			SCALAR_TYPE valueInWarp = warpScan(val, localId, false, WARP_SIZE);\n
 			
 			if (laneId == WARP_SIZE-1)\n
 			{\n
@@ -74,7 +74,7 @@ void main()\n
 			if (warpId == 0)\n
 			{\n
 				val = blockWarpScan[laneId];\n
-				blockWarpScan[laneId] = warpScan(val, laneId, true);\n
+				blockWarpScan[laneId] = warpScan(val, laneId, true, BLOCK_SIZE / WARP_SIZE);\n
 			}\n
 			
 			memoryBarrierShared();\n

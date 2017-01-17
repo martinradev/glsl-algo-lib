@@ -65,7 +65,7 @@ gtest:
 	cp $(GTEST_DIR)/googletest/out/libgtest.a $(OUTPUT_DIR)/libgtest.a
 
 #benchmark
-benchmark: gbenchmark common benchmark_main.o prefix_scan_benchmark.o
+benchmark: build gbenchmark common benchmark_main.o prefix_scan_benchmark.o
 	$(CCP) -o $(OUTPUT_DIR)/benchmark_main $(OUTPUT_DIR)/benchmark_main.o $(OUTPUT_DIR)/prefix_scan_benchmark.o $(OUTPUT_DIR)/gl_setup.o -L$(OUTPUT_DIR) -lglslalgo -lbenchmark -lglad -lglfw3 -lpthread -lX11 -ldl -lXrandr -lXi -lXinerama -lXcursor -lGL
 	
 benchmark_main.o: $(BENCHMARK_DIR)/main.cpp

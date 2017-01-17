@@ -106,7 +106,7 @@ void glsl_scan(const glsl_algo_context *ctx,
                unsigned int rw_per_thread,
                unsigned char is_inclusive)
 {
-    unsigned elements_per_block = ctx->conf.local_block_size * glsl_algo_get_rw_num_elements(ctx->conf.rw_type);
+    unsigned elements_per_block = rw_per_thread * ctx->conf.local_block_size * glsl_algo_get_rw_num_elements(ctx->conf.rw_type);
     unsigned num_blocks = (num_elements + elements_per_block - 1u) / elements_per_block;
     glsl_local_reduce(ctx, input_buffer, intermediate_buffer, num_elements, elements_per_block);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);

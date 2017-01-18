@@ -1,5 +1,6 @@
 #include "gl_setup.hpp"
 #include "scan_utilities.hpp"
+#include "macros.hpp"
 
 #include <glsl_algo/prefix_scan.h>
 #include <gtest/gtest.h>
@@ -17,6 +18,128 @@ protected:
     }
     glsl_algo_context mGlslAlgoContext;
 };
+
+struct ScanParameterVariation
+{
+    GLSL_ALGO_READ_WRITE_TYPE type;
+    unsigned int blockSize;
+    unsigned int elementsPerThread;
+    unsigned char isInclusive;
+};
+
+std::ostream &operator<<(std::ostream &os, const ScanParameterVariation &variation)
+{
+    os << "( " << glsl_algo_get_rw_type_name(variation.type) 
+       << " " << variation.blockSize 
+       << " " << variation.elementsPerThread 
+       << " " << (variation.isInclusive ? "inclusive" : "exclusive")
+       << " )";
+    return os;
+}
+
+class PrefixScanTestWithMultipleParameters : public ::testing::TestWithParam<ScanParameterVariation>
+{
+protected:
+    virtual void SetUp()
+    {
+        init_window_and_gl_context();
+    }
+    virtual void TearDown()
+    {
+        destroy_window_and_gl_context();
+    }
+};
+
+template<typename T>
+static GLSL_ALGO_READ_WRITE_TYPE ConvertType(GLSL_ALGO_READ_WRITE_TYPE inputType)
+{
+    UNIMPLEMENTED("ConvertType<T>");
+    return GARWTundefined;
+}
+
+template<>
+GLSL_ALGO_READ_WRITE_TYPE ConvertType<int>(GLSL_ALGO_READ_WRITE_TYPE inputType)
+{
+    switch (inputType)
+    {
+        case GARWTint1:
+        case GARWTuint1:
+        case GARWTfloat1:
+            return GARWTint1;
+        case GARWTint2:
+        case GARWTuint2:
+        case GARWTfloat2:
+            return GARWTint2;
+        case GARWTint4:
+        case GARWTuint4:
+        case GARWTfloat4:
+            return GARWTint4;
+        default:
+            UNIMPLEMENTED("");
+    }
+    return GARWTundefined;
+}
+
+template<>
+GLSL_ALGO_READ_WRITE_TYPE ConvertType<unsigned>(GLSL_ALGO_READ_WRITE_TYPE inputType)
+{
+    switch (inputType)
+    {
+        case GARWTint1:
+        case GARWTuint1:
+        case GARWTfloat1:
+            return GARWTuint1;
+        case GARWTint2:
+        case GARWTuint2:
+        case GARWTfloat2:
+            return GARWTuint2;
+        case GARWTint4:
+        case GARWTuint4:
+        case GARWTfloat4:
+            return GARWTuint4;
+        default:
+            UNIMPLEMENTED("");
+    }
+    return GARWTundefined;
+}
+
+template<>
+GLSL_ALGO_READ_WRITE_TYPE ConvertType<float>(GLSL_ALGO_READ_WRITE_TYPE inputType)
+{
+    switch (inputType)
+    {
+        case GARWTint1:
+        case GARWTuint1:
+        case GARWTfloat1:
+            return GARWTfloat1;
+        case GARWTint2:
+        case GARWTuint2:
+        case GARWTfloat2:
+            return GARWTfloat2;
+        case GARWTint4:
+        case GARWTuint4:
+        case GARWTfloat4:
+            return GARWTfloat4;
+        default:
+            UNIMPLEMENTED("");
+    }
+    return GARWTundefined;
+}
+
+::testing::AssertionResult AreAllElementsInVectorNear(const std::vector<float> &a, const std::vector<float> &b, float delta) {
+    if (a.size() != b.size())
+    {
+        return ::testing::AssertionFailure() << "Vectors are not of the same size";
+    }
+    for (size_t i = 0; i < a.size(); ++i)
+    {
+        if (abs(a[i] - b[i]) > delta)
+        {
+            return ::testing::AssertionFailure() << "Vectors differ by more than " << delta << ". Error is " << abs(a[i] - b[i]);
+        }
+    }
+    return ::testing::AssertionSuccess();
+}
 
 TEST_F(PrefixScanTest, LocalReduceSmallInputSmallBlockSize)
 {
@@ -645,3 +768,99 @@ TEST_F(PrefixScanTest, FullScanMultipleRWPerThread)
     
     EXPECT_EQ(expectedResult, result);
 }
+
+TEST_P(PrefixScanTestWithMultipleParameters, UnsignedPrefixScan)
+{
+    ScanParameterVariation variation = GetParam();
+    glsl_algo_configuration conf = {ConvertType<unsigned>(variation.type), variation.blockSize, 32};
+    glsl_algo_context ctx = glsl_algo_init(conf);
+    
+    const unsigned n = 1024 * 1024 * 16 + 13;
+    const unsigned numBlocks = (n+128-1) / 128;
+    std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 2u);
+    GLuint inputBuffer = create_ssbo(n, vec.data());
+    GLuint intermediateBuffer = create_ssbo(numBlocks);
+    GLuint outputBuffer = create_ssbo(n);
+    glsl_scan(&ctx, inputBuffer, intermediateBuffer, outputBuffer, n, variation.elementsPerThread, variation.isInclusive);
+    
+    std::vector<unsigned> expectedResult(n, 0);
+    scan(vec.data(), expectedResult.data(), n, n, variation.isInclusive);
+    
+    std::vector<unsigned> result(n, 0);
+    get_ssbo_data(outputBuffer, n, result.data());
+    
+    EXPECT_EQ(expectedResult, result);
+}
+
+TEST_P(PrefixScanTestWithMultipleParameters, SignedPrefixScan)
+{
+    ScanParameterVariation variation = GetParam();
+    glsl_algo_configuration conf = {ConvertType<int>(variation.type), variation.blockSize, 32};
+    glsl_algo_context ctx = glsl_algo_init(conf);
+    
+    const unsigned n = 1024 * 1024 * 16 + 13;
+    const unsigned numBlocks = (n+128-1) / 128;
+    std::vector<int> vec = generateIntegralRandomVector(n, 0, 2);
+    GLuint inputBuffer = create_ssbo(n, vec.data());
+    GLuint intermediateBuffer = create_ssbo(numBlocks);
+    GLuint outputBuffer = create_ssbo(n);
+    glsl_scan(&ctx, inputBuffer, intermediateBuffer, outputBuffer, n, variation.elementsPerThread, variation.isInclusive);
+    
+    std::vector<int> expectedResult(n, 0);
+    scan(vec.data(), expectedResult.data(), n, n, variation.isInclusive);
+    
+    std::vector<int> result(n, 0);
+    get_ssbo_data(outputBuffer, n, result.data());
+    
+    EXPECT_EQ(expectedResult, result);
+}
+
+TEST_P(PrefixScanTestWithMultipleParameters, FloatPrefixScan)
+{
+    ScanParameterVariation variation = GetParam();
+    glsl_algo_configuration conf = {ConvertType<float>(variation.type), variation.blockSize, 32};
+    glsl_algo_context ctx = glsl_algo_init(conf);
+    
+    const unsigned n = 1024 * 1024 * 16 + 13;
+    const unsigned numBlocks = (n+128-1) / 128;
+    std::vector<float> vec = generateFloatRandomVector(n, 0.0f, 2.0f);
+    GLuint inputBuffer = create_ssbo(n, vec.data());
+    GLuint intermediateBuffer = create_ssbo(numBlocks);
+    GLuint outputBuffer = create_ssbo(n);
+    glsl_scan(&ctx, inputBuffer, intermediateBuffer, outputBuffer, n, variation.elementsPerThread, variation.isInclusive);
+    
+    std::vector<float> expectedResult(n, 0);
+    scan(vec.data(), expectedResult.data(), n, n, variation.isInclusive);
+    
+    std::vector<float> result(n, 0);
+    get_ssbo_data(outputBuffer, n, result.data());
+    
+    const float eps = 10000.0f;
+    EXPECT_TRUE(AreAllElementsInVectorNear(expectedResult, result, eps));
+}
+
+static std::vector<ScanParameterVariation> GetScanFullTestParameters()
+{
+    std::vector<ScanParameterVariation> result;
+    
+    GLSL_ALGO_READ_WRITE_TYPE rwTypes[] = {GARWTuint1, GARWTuint2, GARWTuint4};
+    
+    for (unsigned int t = 0u; t < 3u; ++t)
+    {
+        for (unsigned int blockSize = 128u; blockSize <= 1024u; blockSize += 128u)
+        {
+            for (unsigned int readsPerThread = 1u; readsPerThread <= 8u; readsPerThread*=2)
+            {
+                for (unsigned char isInclusive = 0; isInclusive <= 1; ++isInclusive)
+                {
+                    ScanParameterVariation variation = {rwTypes[t], blockSize, readsPerThread, isInclusive};
+                    result.push_back(variation);
+                }
+            }
+        }
+    }
+    return result;
+}
+
+INSTANTIATE_TEST_CASE_P(AllParameters, PrefixScanTestWithMultipleParameters,
+                        ::testing::ValuesIn(GetScanFullTestParameters()));

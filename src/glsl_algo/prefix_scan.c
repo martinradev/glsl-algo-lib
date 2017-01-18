@@ -43,7 +43,7 @@ void glsl_local_scan(const glsl_algo_context *ctx,
     unsigned superScalarNumElements = glsl_algo_get_rw_num_elements(ctx->conf.rw_type);
     unsigned threadBlockSize = superScalarNumElements*ctx->conf.local_block_size;
     
-    unsigned elementsProcessedPerThread = block_size / threadBlockSize;
+    unsigned elementsProcessedPerThread = (threadBlockSize + block_size - 1u) / threadBlockSize;
     unsigned gridSize = (num_elements + block_size - 1u) / block_size;
     unsigned adjustedArraySize = (num_elements + superScalarNumElements - 1u) / superScalarNumElements;
     
@@ -110,8 +110,7 @@ void glsl_scan(const glsl_algo_context *ctx,
     unsigned num_blocks = (num_elements + elements_per_block - 1u) / elements_per_block;
     glsl_local_reduce(ctx, input_buffer, intermediate_buffer, num_elements, elements_per_block);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    unsigned intemediateBlockScanBlockSize = elements_per_block > num_blocks ? elements_per_block : num_blocks;
-    glsl_local_scan(ctx, intermediate_buffer, intermediate_buffer, num_blocks, intemediateBlockScanBlockSize, 0);
+    glsl_local_scan(ctx, intermediate_buffer, intermediate_buffer, num_blocks, num_blocks, 0);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     glsl_local_scan_and_add_block(ctx, input_buffer, intermediate_buffer, output_buffer, num_elements, elements_per_block, is_inclusive);
 }

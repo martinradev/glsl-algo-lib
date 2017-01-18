@@ -110,7 +110,7 @@ static void BM_FullScanMultipleRanges(benchmark::State &state)
 {
     init_window_and_gl_context();
 
-    const unsigned n = 64 * 1024 * 1024;
+    const unsigned n = 8 * 1024 * 1024;
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 3u);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint intermediateBuffer = create_ssbo(1024*128);

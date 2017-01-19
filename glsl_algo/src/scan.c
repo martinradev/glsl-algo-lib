@@ -30,7 +30,7 @@ shared SCALAR_TYPE blockWarpScan[WARP_SIZE];\n
 SCALAR_TYPE warpScan(in SCALAR_TYPE value, in uint localId, in bool isExclusive, in uint warpSize)\n
 {\n
 	sharedMem[localId] = value;\n
-	uint laneIndex = localId%warpSize;\n
+	uint laneIndex = localId%%warpSize;\n
 	uint off = 1;\n
 	while (off < warpSize)\n
 	{\n
@@ -52,7 +52,7 @@ void main()\n
 {\n
 	uint threadId = gl_WorkGroupID.x * gl_WorkGroupSize.x * ElementsPerThread + gl_LocalInvocationID.x;\n
 	uint localId = gl_LocalInvocationID.x;\n
-	uint laneId = localId%WARP_SIZE;\n
+	uint laneId = localId%%WARP_SIZE;\n
 	uint warpId = localId/WARP_SIZE;\n
 	SCALAR_TYPE offset = AddBlockOffset ? blockArray[gl_WorkGroupID.x] : SCALAR_TYPE(0);\n
 	for (uint i = 0; i < ElementsPerThread; ++i)\n

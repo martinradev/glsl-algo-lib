@@ -4,9 +4,9 @@
 #define SHADER(version,src) "#version " #version "\n" \
 "#define TYPE %s\n" \
 "#define SCALAR_TYPE %s\n" \
-"#define BLOCK_SIZE %d\n" \
-"#define ELEMENTS_PER_THREAD %d\n" \
-"#define WARP_SIZE %d\n" \
+"#define BLOCK_SIZE %u\n" \
+"#define ELEMENTS_PER_THREAD %u\n" \
+"#define WARP_SIZE %u\n" \
 "#if ELEMENTS_PER_THREAD == 1\n" \
 "#define SUM(v) v\n" \
 "#define SCAN(v) 0\n" \

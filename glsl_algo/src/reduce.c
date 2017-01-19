@@ -23,7 +23,7 @@ shared SCALAR_TYPE sharedMem[BLOCK_SIZE];\n
 SCALAR_TYPE warpReduce(in SCALAR_TYPE value, in uint localId, in uint width)\n
 {\n
 	sharedMem[localId] = value;\n
-	uint laneIndex = localId%WARP_SIZE;\n
+	uint laneIndex = localId %% WARP_SIZE;\n
 	uint off = 1;\n
 	while (off < width)\n
 	{\n
@@ -38,7 +38,7 @@ void main()\n
 {\n
    uint threadId = gl_WorkGroupID.x * gl_WorkGroupSize.x * ElementsPerThread + gl_LocalInvocationID.x;\n
    uint localId = gl_LocalInvocationID.x;\n
-   uint laneId = localId%WARP_SIZE;\n
+   uint laneId = localId %% WARP_SIZE;\n
    uint warpId = localId/WARP_SIZE;\n
    SCALAR_TYPE val = SCALAR_TYPE(0);\n
    for (uint i = 0; i < ElementsPerThread; ++i)\n

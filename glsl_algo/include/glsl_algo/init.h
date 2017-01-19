@@ -1,8 +1,7 @@
 #ifndef GLSL_ALGO_INIT_H
 #define GLSL_ALGO_INIT_H
 
-#define GL_GLEXT_PROTOTYPES
-#include <GL/gl.h>
+#include <glad/glad.h>
 
 #include <stdio.h>
 #include <stdlib.h>

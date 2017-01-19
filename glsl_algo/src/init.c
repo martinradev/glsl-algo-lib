@@ -15,11 +15,12 @@ static GLuint create_compute_program(const char *source, int len)
     glShaderSource(shader, 1, &source, &len);
     glCompileShader(shader);
     
+	GLchar *buffer = NULL;
     int buffer_len;
     glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &buffer_len);
     if (buffer_len > 0)
     {
-        GLchar *buffer = (GLchar*)malloc(sizeof(GLchar)*buffer_len);
+        buffer = (GLchar*)malloc(sizeof(GLchar)*buffer_len);
         glGetShaderInfoLog(shader, buffer_len, 0, buffer);
         GLSL_ALGO_SHADER_ERROR(buffer, source);
         free(buffer);

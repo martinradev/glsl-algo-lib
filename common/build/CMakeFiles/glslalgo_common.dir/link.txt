@@ -1,0 +1,2 @@
+/usr/bin/ar qc libglslalgo_common.a  CMakeFiles/glslalgo_common.dir/src/gl_setup.cpp.o
+/usr/bin/ranlib libglslalgo_common.a

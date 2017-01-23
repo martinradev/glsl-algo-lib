@@ -7,20 +7,23 @@
 extern "C"{
 #endif
 
-void glsl_local_reduce(const glsl_algo_context *ctx,
+void glsl_local_reduce(const glsl_algo_gl_context *gl_context,
+                       const glsl_algo_context *ctx,
                        GLuint input_buffer,
                        GLuint output_buffer,
                        unsigned int num_elements,
                        unsigned int block_size);
 
-void glsl_local_scan(const glsl_algo_context *ctx,
+void glsl_local_scan(const glsl_algo_gl_context *gl_context,
+                     const glsl_algo_context *ctx,
                      GLuint input_buffer,
                      GLuint output_buffer,
                      unsigned int num_elements,
                      unsigned int block_size,
                      unsigned char is_inclusive);
 
-void glsl_scan(const glsl_algo_context *ctx,
+void glsl_scan(const glsl_algo_gl_context *gl_context,
+               const glsl_algo_context *ctx,
                GLuint input_buffer,
                GLuint intermediate_buffer,
                GLuint output_buffer,

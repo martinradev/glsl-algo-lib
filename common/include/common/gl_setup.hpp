@@ -4,7 +4,9 @@
 #include <glad/glad.h>
 #include <cassert>
 
-int init_window_and_gl_context();
+#include <glsl_algo/init.h>
+
+int init_window_and_gl_context(glsl_algo_gl_context *gl);
 void destroy_window_and_gl_context();
 
 GLuint create_ssbo(unsigned n, void *data = NULL);

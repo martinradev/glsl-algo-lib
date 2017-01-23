@@ -1,7 +1,7 @@
 #ifndef GLSL_ALGO_INIT_H
 #define GLSL_ALGO_INIT_H
 
-#include <glad/glad.h>
+#include <GL/gl.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -119,6 +119,30 @@ static inline GLSL_ALGO_READ_WRITE_TYPE get_equivalent_scalar_type(GLSL_ALGO_REA
 
 typedef struct
 {
+    PFNGLCREATEPROGRAMPROC glCreateProgram;
+    PFNGLUSEPROGRAMPROC glUseProgram;
+    PFNGLLINKPROGRAMPROC glLinkProgram;
+    PFNGLGETPROGRAMIVPROC glGetProgramiv;
+    
+    PFNGLCREATESHADERPROC glCreateShader;
+    PFNGLSHADERSOURCEPROC glShaderSource;
+    PFNGLCOMPILESHADERPROC glCompileShader;
+    PFNGLGETSHADERIVPROC glGetShaderiv;
+    PFNGLGETSHADERINFOLOGPROC glGetShaderInfoLog;
+    PFNGLATTACHSHADERPROC glAttachShader;
+    
+    
+    PFNGLUNIFORM1IPROC glUniform1i;
+    PFNGLUNIFORM1UIPROC glUniform1ui;
+    
+    PFNGLBINDBUFFERBASEPROC glBindBufferBase;
+    
+    PFNGLDISPATCHCOMPUTEPROC glDispatchCompute;
+    PFNGLMEMORYBARRIERPROC glMemoryBarrier;
+} glsl_algo_gl_context;
+
+typedef struct
+{
     // read/write type whenever applicable
     GLSL_ALGO_READ_WRITE_TYPE rw_type;
     unsigned local_block_size;
@@ -134,7 +158,7 @@ typedef struct
     GLuint copy_buffer_program;
 } glsl_algo_context;
 
-glsl_algo_context glsl_algo_init(glsl_algo_configuration conf);
+glsl_algo_context glsl_algo_init(const glsl_algo_gl_context *gl_context, glsl_algo_configuration conf);
 
 #ifdef __cplusplus
 }

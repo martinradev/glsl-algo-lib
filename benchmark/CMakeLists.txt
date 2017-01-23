@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(glsl_algo_benchmark)
 
 if(MSVC)
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")

@@ -4,7 +4,7 @@
 
 #include <cstdio>
 
-int init_window_and_gl_context()
+int init_window_and_gl_context(glsl_algo_gl_context *gl)
 {
     if (!glfwInit()) {
         fprintf(stderr, "ERROR: could not start GLFW3\n");
@@ -29,6 +29,22 @@ int init_window_and_gl_context()
         fprintf(stderr, "ERROR: Failed to initialize OpenGL context");
         return 1;
     }
+    
+    gl->glCreateProgram = glad_glCreateProgram;
+    gl->glUseProgram = glad_glUseProgram;
+    gl->glLinkProgram = glad_glLinkProgram;
+    gl->glGetProgramiv = glad_glGetProgramiv;
+    gl->glCreateShader = glad_glCreateShader;
+    gl->glShaderSource = glad_glShaderSource;
+    gl->glCompileShader = glad_glCompileShader;
+    gl->glGetShaderiv = glad_glGetShaderiv;
+    gl->glGetShaderInfoLog = glad_glGetShaderInfoLog;
+    gl->glAttachShader = glad_glAttachShader;
+    gl->glUniform1i = glad_glUniform1i;
+    gl->glUniform1ui = glad_glUniform1ui;
+    gl->glBindBufferBase = glad_glBindBufferBase;
+    gl->glDispatchCompute = glad_glDispatchCompute;
+    gl->glMemoryBarrier = glad_glMemoryBarrier;
     
     return 0;
 }

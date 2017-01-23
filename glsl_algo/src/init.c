@@ -4,39 +4,39 @@
 #include <stdlib.h>
 #include <string.h>
 
-static GLuint create_compute_program(const char *source, int len)
+static GLuint create_compute_program(const glsl_algo_gl_context *gl_context, const char *source, int len)
 {
-    GLuint program = glCreateProgram();
+    GLuint program = gl_context->glCreateProgram();
     assert(program != 0);
     
-    GLuint shader = glCreateShader(GL_COMPUTE_SHADER);
+    GLuint shader = gl_context->glCreateShader(GL_COMPUTE_SHADER);
     assert(shader != 0);
     
-    glShaderSource(shader, 1, &source, &len);
-    glCompileShader(shader);
+    gl_context->glShaderSource(shader, 1, &source, &len);
+    gl_context->glCompileShader(shader);
     
-	GLchar *buffer = NULL;
+	  GLchar *buffer = NULL;
     int buffer_len;
-    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &buffer_len);
+    gl_context->glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &buffer_len);
     if (buffer_len > 0)
     {
         buffer = (GLchar*)malloc(sizeof(GLchar)*buffer_len);
-        glGetShaderInfoLog(shader, buffer_len, 0, buffer);
+        gl_context->glGetShaderInfoLog(shader, buffer_len, 0, buffer);
         GLSL_ALGO_SHADER_ERROR(buffer, source);
         free(buffer);
     }
     
     int success;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+    gl_context->glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
     if (success != GL_TRUE)
     { 
         GLSL_ALGO_SHADER_ERROR("Failed to compile shader.", source);
     }
     
-    glAttachShader(program, shader);
-    glLinkProgram(program);
+    gl_context->glAttachShader(program, shader);
+    gl_context->glLinkProgram(program);
     
-    glGetProgramiv(program, GL_LINK_STATUS, &success);
+    gl_context->glGetProgramiv(program, GL_LINK_STATUS, &success);
     if (success != GL_TRUE)
     { 
         GLSL_ALGO_SHADER_ERROR("Failed to link program.", source);
@@ -45,7 +45,7 @@ static GLuint create_compute_program(const char *source, int len)
     return program;
 }
 
-glsl_algo_context glsl_algo_init(glsl_algo_configuration conf)
+glsl_algo_context glsl_algo_init(const glsl_algo_gl_context *gl_context, glsl_algo_configuration conf)
 {
     const int buffer_max_size = 4096;
     glsl_algo_context ctx;
@@ -60,20 +60,20 @@ glsl_algo_context glsl_algo_init(glsl_algo_configuration conf)
         
     int shaderSourceLen = snprintf(buffer, buffer_max_size, GLSL_ALGO_LOCAL_REDUCE_SHADER_SRC, type_name, scalar_type_name, conf.local_block_size, num_elements, conf.warp_size);
     assert(shaderSourceLen >= 0 && shaderSourceLen < buffer_max_size);
-    ctx.reduce_program = create_compute_program(buffer, shaderSourceLen);
+    ctx.reduce_program = create_compute_program(gl_context, buffer, shaderSourceLen);
     
     shaderSourceLen = snprintf(buffer, buffer_max_size, GLSL_ALGO_LOCAL_SCAN_SHADER_SRC, type_name, scalar_type_name, conf.local_block_size, num_elements, conf.warp_size);
     assert(shaderSourceLen >= 0 && shaderSourceLen < buffer_max_size);
-    ctx.scan_program = create_compute_program(buffer, shaderSourceLen);
+    ctx.scan_program = create_compute_program(gl_context, buffer, shaderSourceLen);
     
     shaderSourceLen = snprintf(buffer, buffer_max_size, GLSL_ALGO_SET_MEMORY_TO_ZERO_SRC, type_name, scalar_type_name, conf.local_block_size, num_elements, conf.warp_size);
     assert(shaderSourceLen >= 0 && shaderSourceLen < buffer_max_size);
-    ctx.set_value_program = create_compute_program(buffer, shaderSourceLen);
+    ctx.set_value_program = create_compute_program(gl_context, buffer, shaderSourceLen);
     
     shaderSourceLen = snprintf(buffer, buffer_max_size, GLSL_ALGO_COPY_MEMORY_SRC, type_name, scalar_type_name, conf.local_block_size, num_elements, conf.warp_size);
     assert(shaderSourceLen >= 0 && shaderSourceLen < buffer_max_size);
-    ctx.copy_buffer_program = create_compute_program(buffer, shaderSourceLen);
-    
+    ctx.copy_buffer_program = create_compute_program(gl_context, buffer, shaderSourceLen);
+
     free(buffer);
     
     return ctx;

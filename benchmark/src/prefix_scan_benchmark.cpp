@@ -7,10 +7,11 @@
 #include "benchmark/util.hpp"
 
 static void BM_FullScan(benchmark::State &state) {
-    init_window_and_gl_context();
+    glsl_algo_gl_context glContext;
+    init_window_and_gl_context(&glContext);
     
     glsl_algo_configuration conf = {GARWTint1, 1024, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&glContext, conf);
 
     const unsigned numBlocks = 1024;
     const unsigned n = 1024 * numBlocks;
@@ -24,7 +25,7 @@ static void BM_FullScan(benchmark::State &state) {
     
     while (state.KeepRunning())
     {
-        BENCHMARK_GPU(glsl_scan(&ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 1), queryObject);
+        BENCHMARK_GPU(glsl_scan(&glContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 1), queryObject);
     }
 
     destroy_window_and_gl_context();
@@ -32,7 +33,8 @@ static void BM_FullScan(benchmark::State &state) {
 
 static void BM_FullScanRW(benchmark::State &state)
 {
-    init_window_and_gl_context();
+    glsl_algo_gl_context glContext;
+    init_window_and_gl_context(&glContext);
     
     const unsigned numBlocks = 1024;
     const unsigned n = 16 * 1024 * numBlocks;
@@ -50,16 +52,17 @@ static void BM_FullScanRW(benchmark::State &state)
         GLSL_ALGO_READ_WRITE_TYPE dataType = static_cast<GLSL_ALGO_READ_WRITE_TYPE>(state.range(0));
       
         glsl_algo_configuration conf = {dataType, 1024, 32};
-        glsl_algo_context ctx = glsl_algo_init(conf);
+        glsl_algo_context ctx = glsl_algo_init(&glContext, conf);
       
-        BENCHMARK_GPU(glsl_scan(&ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 1), queryObject);
+        BENCHMARK_GPU(glsl_scan(&glContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 1), queryObject);
     }
     destroy_window_and_gl_context();
 }
 
 static void BM_FullScanBlockSize(benchmark::State &state)
 {
-    init_window_and_gl_context();
+    glsl_algo_gl_context glContext;
+    init_window_and_gl_context(&glContext);
     
     const unsigned numBlocks = 1024 * 128;
     const unsigned n = 16 * 1024 * 1024;
@@ -75,18 +78,19 @@ static void BM_FullScanBlockSize(benchmark::State &state)
     {
         unsigned int blockSize = static_cast<unsigned int>(state.range(0));
         glsl_algo_configuration conf = {GARWTint1, blockSize, 32};
-        glsl_algo_context ctx = glsl_algo_init(conf);
+        glsl_algo_context ctx = glsl_algo_init(&glContext, conf);
       
-        BENCHMARK_GPU(glsl_scan(&ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 1), queryObject);
+        BENCHMARK_GPU(glsl_scan(&glContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 1), queryObject);
     }
     destroy_window_and_gl_context();
 }
 
 static void BM_FullScanElementsPerThread(benchmark::State &state) {
-    init_window_and_gl_context();
+    glsl_algo_gl_context glContext;
+    init_window_and_gl_context(&glContext);
     
     glsl_algo_configuration conf = {GARWTint1, 1024, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&glContext, conf);
 
     const unsigned numBlocks = 128 * 1024;
     const unsigned n = 1024 * 1024 * 16;
@@ -101,7 +105,7 @@ static void BM_FullScanElementsPerThread(benchmark::State &state) {
     while (state.KeepRunning())
     {
         unsigned int elementsPerThread = static_cast<unsigned int>(state.range(0));
-        BENCHMARK_GPU(glsl_scan(&ctx, inputBuffer, intermediateBuffer, outputBuffer, n, elementsPerThread, 1), queryObject);
+        BENCHMARK_GPU(glsl_scan(&glContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, elementsPerThread, 1), queryObject);
     }
 
     destroy_window_and_gl_context();
@@ -109,7 +113,8 @@ static void BM_FullScanElementsPerThread(benchmark::State &state) {
 
 static void BM_FullScanMultipleRanges(benchmark::State &state)
 {
-    init_window_and_gl_context();
+    glsl_algo_gl_context glContext;
+    init_window_and_gl_context(&glContext);
 
     const unsigned n = 8 * 1024 * 1024;
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 3u);
@@ -126,9 +131,9 @@ static void BM_FullScanMultipleRanges(benchmark::State &state)
         unsigned int blockSize = static_cast<unsigned int>(state.range(1));
         unsigned int readsPerThread = static_cast<unsigned int>(state.range(2));
         glsl_algo_configuration conf = {type, blockSize, 32};
-        glsl_algo_context ctx = glsl_algo_init(conf);
+        glsl_algo_context ctx = glsl_algo_init(&glContext, conf);
       
-        BENCHMARK_GPU(glsl_scan(&ctx, inputBuffer, intermediateBuffer, outputBuffer, n, readsPerThread, 1), queryObject);
+        BENCHMARK_GPU(glsl_scan(&glContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, readsPerThread, 1), queryObject);
     }
     destroy_window_and_gl_context();
 }

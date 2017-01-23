@@ -10,13 +10,13 @@ class PrefixScanTest : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        init_window_and_gl_context();
+        init_window_and_gl_context(&mGLContext);
     }
     virtual void TearDown()
     {
         destroy_window_and_gl_context();
     }
-    glsl_algo_context mGlslAlgoContext;
+    glsl_algo_gl_context mGLContext;
 };
 
 struct ScanParameterVariation
@@ -42,12 +42,13 @@ class PrefixScanTestWithMultipleParameters : public ::testing::TestWithParam<Sca
 protected:
     virtual void SetUp()
     {
-        init_window_and_gl_context();
+        init_window_and_gl_context(&mGLContext);
     }
     virtual void TearDown()
     {
         destroy_window_and_gl_context();
     }
+    glsl_algo_gl_context mGLContext;
 };
 
 template<typename T>
@@ -144,13 +145,13 @@ GLSL_ALGO_READ_WRITE_TYPE ConvertType<float>(GLSL_ALGO_READ_WRITE_TYPE inputType
 TEST_F(PrefixScanTest, LocalReduceSmallInputSmallBlockSize)
 {
     glsl_algo_configuration conf = {GARWTint1, 256, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
     const unsigned n = ctx.conf.local_block_size;
     std::vector<int> vec = generateIntegralRandomVector(n, 0, 6);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint outputBuffer = create_ssbo(1);
-    glsl_local_reduce(&ctx, inputBuffer, outputBuffer, n, ctx.conf.local_block_size);
+    glsl_local_reduce(&mGLContext, &ctx, inputBuffer, outputBuffer, n, ctx.conf.local_block_size);
     
     int expectedResult = 0;
     reduce(vec.data(), &expectedResult, n, ctx.conf.local_block_size);
@@ -164,14 +165,14 @@ TEST_F(PrefixScanTest, LocalReduceSmallInputSmallBlockSize)
 TEST_F(PrefixScanTest, LocalReduceBigInputSmallBlockSize)
 {
     glsl_algo_configuration conf = {GARWTint1, 256, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
     const unsigned numBlocks = 256;
     const unsigned n = ctx.conf.local_block_size * numBlocks;
     std::vector<int> vec = generateIntegralRandomVector(n, 0, 6);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint outputBuffer = create_ssbo(numBlocks);
-    glsl_local_reduce(&ctx, inputBuffer, outputBuffer, n, ctx.conf.local_block_size);
+    glsl_local_reduce(&mGLContext, &ctx, inputBuffer, outputBuffer, n, ctx.conf.local_block_size);
     
     std::vector<int> expectedResult(numBlocks, 0);
     reduce(vec.data(), expectedResult.data(), n, ctx.conf.local_block_size);
@@ -185,14 +186,14 @@ TEST_F(PrefixScanTest, LocalReduceBigInputSmallBlockSize)
 TEST_F(PrefixScanTest, LocalReduceBigInputBigBlockSize)
 {
     glsl_algo_configuration conf = {GARWTint1, 1024, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
     const unsigned numBlocks = 32;
     const unsigned n = ctx.conf.local_block_size * numBlocks;
     std::vector<int> vec = generateIntegralRandomVector(n, 0, 6);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint outputBuffer = create_ssbo(numBlocks);
-    glsl_local_reduce(&ctx, inputBuffer, outputBuffer, n, ctx.conf.local_block_size);
+    glsl_local_reduce(&mGLContext, &ctx, inputBuffer, outputBuffer, n, ctx.conf.local_block_size);
     
     std::vector<int> expectedResult(numBlocks, 0);
     reduce(vec.data(), expectedResult.data(), n, ctx.conf.local_block_size);
@@ -206,7 +207,7 @@ TEST_F(PrefixScanTest, LocalReduceBigInputBigBlockSize)
 TEST_F(PrefixScanTest, LocalReduceIvec2)
 {
     glsl_algo_configuration conf = {GARWTint2, 256, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
     const unsigned numBlocks = 4;
     const unsigned elementsPerRead = 2;
@@ -215,7 +216,7 @@ TEST_F(PrefixScanTest, LocalReduceIvec2)
     std::vector<int> vec = generateIntegralRandomVector(n, 0, 6);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint outputBuffer = create_ssbo(numBlocks);
-    glsl_local_reduce(&ctx, inputBuffer, outputBuffer, n, elementsPerBlock);
+    glsl_local_reduce(&mGLContext, &ctx, inputBuffer, outputBuffer, n, elementsPerBlock);
     
     std::vector<int> expectedResult(numBlocks, 0);
     reduce(vec.data(), expectedResult.data(), n, elementsPerBlock);
@@ -229,7 +230,7 @@ TEST_F(PrefixScanTest, LocalReduceIvec2)
 TEST_F(PrefixScanTest, LocalReduceIvec4)
 {
     glsl_algo_configuration conf = {GARWTint4, 1024, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
     const unsigned numBlocks = 4;
     const unsigned elementsPerRead = 4;
@@ -238,7 +239,7 @@ TEST_F(PrefixScanTest, LocalReduceIvec4)
     std::vector<int> vec = generateIntegralRandomVector(n, 0, 6);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint outputBuffer = create_ssbo(numBlocks);
-    glsl_local_reduce(&ctx, inputBuffer, outputBuffer, n, elementsPerBlock);
+    glsl_local_reduce(&mGLContext, &ctx, inputBuffer, outputBuffer, n, elementsPerBlock);
     
     std::vector<int> expectedResult(numBlocks, 0);
     reduce(vec.data(), expectedResult.data(), n, elementsPerBlock);
@@ -252,7 +253,7 @@ TEST_F(PrefixScanTest, LocalReduceIvec4)
 TEST_F(PrefixScanTest, LocalReduceVec4)
 {
     glsl_algo_configuration conf = {GARWTfloat4, 1024, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
     const unsigned numBlocks = 4;
     const unsigned elementsPerRead = 4;
@@ -261,7 +262,7 @@ TEST_F(PrefixScanTest, LocalReduceVec4)
     std::vector<float> vec = generateFloatRandomVector(n, 0.0f, 6.0f);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint outputBuffer = create_ssbo(numBlocks);
-    glsl_local_reduce(&ctx, inputBuffer, outputBuffer, n, elementsPerBlock);
+    glsl_local_reduce(&mGLContext, &ctx, inputBuffer, outputBuffer, n, elementsPerBlock);
     
     std::vector<float> expectedResult(numBlocks, 0);
     reduce(vec.data(), expectedResult.data(), n, elementsPerBlock);
@@ -279,7 +280,7 @@ TEST_F(PrefixScanTest, LocalReduceVec4)
 TEST_F(PrefixScanTest, LocalReduceUvec4)
 {
     glsl_algo_configuration conf = {GARWTuint4, 1024, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
     const unsigned numBlocks = 4;
     const unsigned elementsPerRead = 4;
@@ -288,7 +289,7 @@ TEST_F(PrefixScanTest, LocalReduceUvec4)
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 6u);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint outputBuffer = create_ssbo(numBlocks);
-    glsl_local_reduce(&ctx, inputBuffer, outputBuffer, n, elementsPerBlock);
+    glsl_local_reduce(&mGLContext, &ctx, inputBuffer, outputBuffer, n, elementsPerBlock);
     
     std::vector<unsigned> expectedResult(numBlocks, 0);
     reduce(vec.data(), expectedResult.data(), n, elementsPerBlock);
@@ -302,7 +303,7 @@ TEST_F(PrefixScanTest, LocalReduceUvec4)
 TEST_F(PrefixScanTest, LocalReduceFloat)
 {
     glsl_algo_configuration conf = {GARWTfloat1, 1024, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
     const unsigned numBlocks = 64;
     const unsigned elementsPerRead = 1;
@@ -311,7 +312,7 @@ TEST_F(PrefixScanTest, LocalReduceFloat)
     std::vector<float> vec = generateFloatRandomVector(n, 0.0f, 6.0f);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint outputBuffer = create_ssbo(numBlocks);
-    glsl_local_reduce(&ctx, inputBuffer, outputBuffer, n, elementsPerBlock);
+    glsl_local_reduce(&mGLContext, &ctx, inputBuffer, outputBuffer, n, elementsPerBlock);
     
     std::vector<float> expectedResult(numBlocks, 0);
     reduce(vec.data(), expectedResult.data(), n, elementsPerBlock);
@@ -329,13 +330,13 @@ TEST_F(PrefixScanTest, LocalReduceFloat)
 TEST_F(PrefixScanTest, LocalReduceVerySmall)
 {
     glsl_algo_configuration conf = {GARWTint1, 256, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
     const unsigned n = 16;
     std::vector<int> vec = generateIntegralRandomVector(n, 0, 6);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint outputBuffer = create_ssbo(1);
-    glsl_local_reduce(&ctx, inputBuffer, outputBuffer, n, ctx.conf.local_block_size);
+    glsl_local_reduce(&mGLContext, &ctx, inputBuffer, outputBuffer, n, ctx.conf.local_block_size);
     
     int expectedResult = 0;
     reduce(vec.data(), &expectedResult, n, ctx.conf.local_block_size);
@@ -349,7 +350,7 @@ TEST_F(PrefixScanTest, LocalReduceVerySmall)
 TEST_F(PrefixScanTest, LocalReduceMultipleIvec4)
 {
     glsl_algo_configuration conf = {GARWTint4, 1024, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
     const unsigned numBlocks = 4;
     const unsigned elementsPerRead = 4;
@@ -359,7 +360,7 @@ TEST_F(PrefixScanTest, LocalReduceMultipleIvec4)
     std::vector<int> vec = generateIntegralRandomVector(n, 0, 3);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint outputBuffer = create_ssbo(numBlocks);
-    glsl_local_reduce(&ctx, inputBuffer, outputBuffer, n, elementsPerBlock);
+    glsl_local_reduce(&mGLContext, &ctx, inputBuffer, outputBuffer, n, elementsPerBlock);
     
     std::vector<int> expectedResult(numBlocks, 0);
     reduce(vec.data(), expectedResult.data(), n, elementsPerBlock);
@@ -373,13 +374,13 @@ TEST_F(PrefixScanTest, LocalReduceMultipleIvec4)
 TEST_F(PrefixScanTest, LocalScanSimpleTest)
 {
     glsl_algo_configuration conf = {GARWTint1, 1024, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
     
     const unsigned n = 1024;
     std::vector<int> vec = generateIntegralRandomVector(n, 0, 3);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint outputBuffer = create_ssbo(n);
-    glsl_local_scan(&ctx, inputBuffer, outputBuffer, n, conf.local_block_size, 0);
+    glsl_local_scan(&mGLContext, &ctx, inputBuffer, outputBuffer, n, conf.local_block_size, 0);
     
     std::vector<int> expectedResult(n, 0);
     scan(vec.data(), expectedResult.data(), n, conf.local_block_size, 0);
@@ -393,13 +394,13 @@ TEST_F(PrefixScanTest, LocalScanSimpleTest)
 TEST_F(PrefixScanTest, LocalScanFloat1)
 {
     glsl_algo_configuration conf = {GARWTfloat1, 1024, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
     
     const unsigned n = 1024;
     std::vector<float> vec = generateFloatRandomVector(n, 0.0f, 3.0f);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint outputBuffer = create_ssbo(n);
-    glsl_local_scan(&ctx, inputBuffer, outputBuffer, n, conf.local_block_size, 0);
+    glsl_local_scan(&mGLContext, &ctx, inputBuffer, outputBuffer, n, conf.local_block_size, 0);
     
     std::vector<float> expectedResult(n, 0);
     scan(vec.data(), expectedResult.data(), n, conf.local_block_size, 0);
@@ -417,14 +418,14 @@ TEST_F(PrefixScanTest, LocalScanFloat1)
 TEST_F(PrefixScanTest, LocalScanUvec4)
 {
     glsl_algo_configuration conf = {GARWTuint4, 1024, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
     
     const unsigned typeSize = 4;
     const unsigned n = 1024 * typeSize;
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 6u);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint outputBuffer = create_ssbo(n);
-    glsl_local_scan(&ctx, inputBuffer, outputBuffer, n, n, 0);
+    glsl_local_scan(&mGLContext, &ctx, inputBuffer, outputBuffer, n, n, 0);
     
     std::vector<unsigned> expectedResult(n, 0);
     scan(vec.data(), expectedResult.data(), n, n, 0);
@@ -438,14 +439,14 @@ TEST_F(PrefixScanTest, LocalScanUvec4)
 TEST_F(PrefixScanTest, LocalScanFloat4)
 {
     glsl_algo_configuration conf = {GARWTfloat4, 1024, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
     
     const unsigned typeSize = 4;
     const unsigned n = 1024 * typeSize;
     std::vector<float> vec = generateFloatRandomVector(n, 0.0f, 3.0f);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint outputBuffer = create_ssbo(n);
-    glsl_local_scan(&ctx, inputBuffer, outputBuffer, n, n, 0);
+    glsl_local_scan(&mGLContext, &ctx, inputBuffer, outputBuffer, n, n, 0);
     
     std::vector<float> expectedResult(n, 0);
     scan(vec.data(), expectedResult.data(), n, n, 0);
@@ -463,7 +464,7 @@ TEST_F(PrefixScanTest, LocalScanFloat4)
 TEST_F(PrefixScanTest, LocalScanMultipleElementsPerThread)
 {
     glsl_algo_configuration conf = {GARWTuint4, 1024, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
     
     const unsigned elementsPerThread = 16;
     const unsigned typeSize = 4;
@@ -471,7 +472,7 @@ TEST_F(PrefixScanTest, LocalScanMultipleElementsPerThread)
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 6u);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint outputBuffer = create_ssbo(n);
-    glsl_local_scan(&ctx, inputBuffer, outputBuffer, n, n, 0);
+    glsl_local_scan(&mGLContext, &ctx, inputBuffer, outputBuffer, n, n, 0);
     
     std::vector<unsigned> expectedResult(n, 0);
     scan(vec.data(), expectedResult.data(), n, n, 0);
@@ -485,7 +486,7 @@ TEST_F(PrefixScanTest, LocalScanMultipleElementsPerThread)
 TEST_F(PrefixScanTest, LocalScanMultipleBlocks)
 {
     glsl_algo_configuration conf = {GARWTuint4, 1024, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
     
     const unsigned numBlocks = 16;
     const unsigned typeSize = 4;
@@ -494,7 +495,7 @@ TEST_F(PrefixScanTest, LocalScanMultipleBlocks)
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 6u);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint outputBuffer = create_ssbo(n);
-    glsl_local_scan(&ctx, inputBuffer, outputBuffer, n, blockSize, 0);
+    glsl_local_scan(&mGLContext, &ctx, inputBuffer, outputBuffer, n, blockSize, 0);
     
     std::vector<unsigned> expectedResult(n, 0);
     scan(vec.data(), expectedResult.data(), n, blockSize, 0);
@@ -508,13 +509,13 @@ TEST_F(PrefixScanTest, LocalScanMultipleBlocks)
 TEST_F(PrefixScanTest, LocalScanSmallArray)
 {
     glsl_algo_configuration conf = {GARWTuint4, 1024, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
     
     const unsigned n = 256;
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 6u);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint outputBuffer = create_ssbo(n);
-    glsl_local_scan(&ctx, inputBuffer, outputBuffer, n, 4096, 0);
+    glsl_local_scan(&mGLContext, &ctx, inputBuffer, outputBuffer, n, 4096, 0);
     
     std::vector<unsigned> expectedResult(n, 0);
     scan(vec.data(), expectedResult.data(), n, n, 0);
@@ -528,7 +529,7 @@ TEST_F(PrefixScanTest, LocalScanSmallArray)
 TEST_F(PrefixScanTest, LocalScanInclusive)
 {
     glsl_algo_configuration conf = {GARWTuint1, 1024, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
     
     const unsigned numBlocks = 16;
     const unsigned typeSize = 1;
@@ -537,7 +538,7 @@ TEST_F(PrefixScanTest, LocalScanInclusive)
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 6u);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint outputBuffer = create_ssbo(n);
-    glsl_local_scan(&ctx, inputBuffer, outputBuffer, n, blockSize, 1);
+    glsl_local_scan(&mGLContext, &ctx, inputBuffer, outputBuffer, n, blockSize, 1);
     
     std::vector<unsigned> expectedResult(n, 0);
     scan(vec.data(), expectedResult.data(), n, blockSize, 1);
@@ -551,7 +552,7 @@ TEST_F(PrefixScanTest, LocalScanInclusive)
 TEST_F(PrefixScanTest, LocalScanInt4Inclusive)
 {
     glsl_algo_configuration conf = {GARWTint4, 1024, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
     
     const unsigned elementsPerThread = 3;
     const unsigned numBlocks = 16;
@@ -561,7 +562,7 @@ TEST_F(PrefixScanTest, LocalScanInt4Inclusive)
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 6u);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint outputBuffer = create_ssbo(n);
-    glsl_local_scan(&ctx, inputBuffer, outputBuffer, n, blockSize, 1);
+    glsl_local_scan(&mGLContext, &ctx, inputBuffer, outputBuffer, n, blockSize, 1);
     
     std::vector<unsigned> expectedResult(n, 0);
     scan(vec.data(), expectedResult.data(), n, blockSize, 1);
@@ -575,7 +576,7 @@ TEST_F(PrefixScanTest, LocalScanInt4Inclusive)
 TEST_F(PrefixScanTest, LocalScanSameInputAndOutputBuffers)
 {
     glsl_algo_configuration conf = {GARWTuint4, 1024, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
     
     const unsigned numBlocks = 16;
     const unsigned typeSize = 4;
@@ -583,7 +584,7 @@ TEST_F(PrefixScanTest, LocalScanSameInputAndOutputBuffers)
     const unsigned n = 1024 * typeSize * numBlocks;
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 6u);
     GLuint inputOutputBuffer = create_ssbo(n, vec.data());
-    glsl_local_scan(&ctx, inputOutputBuffer, inputOutputBuffer, n, blockSize, 0);
+    glsl_local_scan(&mGLContext, &ctx, inputOutputBuffer, inputOutputBuffer, n, blockSize, 0);
     
     std::vector<unsigned> expectedResult(n, 0);
     scan(vec.data(), expectedResult.data(), n, blockSize, 0);
@@ -597,7 +598,7 @@ TEST_F(PrefixScanTest, LocalScanSameInputAndOutputBuffers)
 TEST_F(PrefixScanTest, FullScan)
 {
     glsl_algo_configuration conf = {GARWTint1, 1024, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
 
     const unsigned numBlocks = 256;
     const unsigned n = 1024 * numBlocks;
@@ -605,7 +606,7 @@ TEST_F(PrefixScanTest, FullScan)
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint intermediateBuffer = create_ssbo(numBlocks);
     GLuint outputBuffer = create_ssbo(n);
-    glsl_scan(&ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 0);
+    glsl_scan(&mGLContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 0);
     
     std::vector<unsigned> expectedResult(n, 0);
     scan(vec.data(), expectedResult.data(), n, n, 0);
@@ -619,7 +620,7 @@ TEST_F(PrefixScanTest, FullScan)
 TEST_F(PrefixScanTest, FullScanLarge)
 {
     glsl_algo_configuration conf = {GARWTint1, 1024, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
 
     const unsigned numBlocks = 2048;
     const unsigned n = 1024 * numBlocks;
@@ -627,7 +628,7 @@ TEST_F(PrefixScanTest, FullScanLarge)
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint intermediateBuffer = create_ssbo(numBlocks);
     GLuint outputBuffer = create_ssbo(n);
-    glsl_scan(&ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 0);
+    glsl_scan(&mGLContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 0);
     
     std::vector<unsigned> expectedResult(n, 0);
     scan(vec.data(), expectedResult.data(), n, n, 0);
@@ -641,7 +642,7 @@ TEST_F(PrefixScanTest, FullScanLarge)
 TEST_F(PrefixScanTest, FullScanLargeUint4)
 {
     glsl_algo_configuration conf = {GARWTuint4, 1024, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
 
     const unsigned numBlocks = 2048;
     const unsigned n = 1024 * numBlocks;
@@ -649,7 +650,7 @@ TEST_F(PrefixScanTest, FullScanLargeUint4)
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint intermediateBuffer = create_ssbo(numBlocks);
     GLuint outputBuffer = create_ssbo(n);
-    glsl_scan(&ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 0);
+    glsl_scan(&mGLContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 0);
     
     std::vector<unsigned> expectedResult(n, 0);
     scan(vec.data(), expectedResult.data(), n, n, 0);
@@ -663,7 +664,7 @@ TEST_F(PrefixScanTest, FullScanLargeUint4)
 TEST_F(PrefixScanTest, FullInclusiveScan)
 {
     glsl_algo_configuration conf = {GARWTint1, 1024, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
 
     const unsigned numBlocks = 256;
     const unsigned n = 1024 * numBlocks;
@@ -671,7 +672,7 @@ TEST_F(PrefixScanTest, FullInclusiveScan)
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint intermediateBuffer = create_ssbo(numBlocks);
     GLuint outputBuffer = create_ssbo(n);
-    glsl_scan(&ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 1);
+    glsl_scan(&mGLContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 1);
     
     std::vector<unsigned> expectedResult(n, 0);
     scan(vec.data(), expectedResult.data(), n, n, 1);
@@ -685,14 +686,14 @@ TEST_F(PrefixScanTest, FullInclusiveScan)
 TEST_F(PrefixScanTest, FullInclusiveScanSameBuffer)
 {
     glsl_algo_configuration conf = {GARWTint1, 1024, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
 
     const unsigned numBlocks = 256;
     const unsigned n = 1024 * numBlocks;
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 3u);
     GLuint inputOutputBuffer = create_ssbo(n, vec.data());
     GLuint intermediateBuffer = create_ssbo(numBlocks);
-    glsl_scan(&ctx, inputOutputBuffer, intermediateBuffer, inputOutputBuffer, n, 1, 1);
+    glsl_scan(&mGLContext, &ctx, inputOutputBuffer, intermediateBuffer, inputOutputBuffer, n, 1, 1);
     
     std::vector<unsigned> expectedResult(n, 0);
     scan(vec.data(), expectedResult.data(), n, n, 1);
@@ -706,7 +707,7 @@ TEST_F(PrefixScanTest, FullInclusiveScanSameBuffer)
 TEST_F(PrefixScanTest, FullScanSmallBlockSize)
 {
     glsl_algo_configuration conf = {GARWTint1, 256, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
 
     const unsigned numBlocks = 1024;
     const unsigned n = 1024 * 256;
@@ -714,7 +715,7 @@ TEST_F(PrefixScanTest, FullScanSmallBlockSize)
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint intermediateBuffer = create_ssbo(numBlocks);
     GLuint outputBuffer = create_ssbo(n);
-    glsl_scan(&ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 0);
+    glsl_scan(&mGLContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 0);
     
     std::vector<unsigned> expectedResult(n, 0);
     scan(vec.data(), expectedResult.data(), n, n, 0);
@@ -728,7 +729,7 @@ TEST_F(PrefixScanTest, FullScanSmallBlockSize)
 TEST_F(PrefixScanTest, FullScanMediumBlockSize)
 {
     glsl_algo_configuration conf = {GARWTint1, 512, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
 
     const unsigned numBlocks = 512;
     const unsigned n = 1024 * 256;
@@ -736,7 +737,7 @@ TEST_F(PrefixScanTest, FullScanMediumBlockSize)
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint intermediateBuffer = create_ssbo(numBlocks);
     GLuint outputBuffer = create_ssbo(n);
-    glsl_scan(&ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 0);
+    glsl_scan(&mGLContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 0);
     
     std::vector<unsigned> expectedResult(n, 0);
     scan(vec.data(), expectedResult.data(), n, n, 0);
@@ -750,7 +751,7 @@ TEST_F(PrefixScanTest, FullScanMediumBlockSize)
 TEST_F(PrefixScanTest, FullScanMultipleRWPerThread)
 {
     glsl_algo_configuration conf = {GARWTint1, 1024, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
 
     const unsigned numBlocks = 256;
     const unsigned n = 1024 * numBlocks;
@@ -758,7 +759,7 @@ TEST_F(PrefixScanTest, FullScanMultipleRWPerThread)
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint intermediateBuffer = create_ssbo(numBlocks);
     GLuint outputBuffer = create_ssbo(n);
-    glsl_scan(&ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 16, 0);
+    glsl_scan(&mGLContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 16, 0);
     
     std::vector<unsigned> expectedResult(n, 0);
     scan(vec.data(), expectedResult.data(), n, n, 0);
@@ -773,7 +774,7 @@ TEST_P(PrefixScanTestWithMultipleParameters, UnsignedPrefixScan)
 {
     ScanParameterVariation variation = GetParam();
     glsl_algo_configuration conf = {ConvertType<unsigned>(variation.type), variation.blockSize, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
     
     const unsigned n = 1024 * 1024 * 16 + 13;
     const unsigned numBlocks = (n+128-1) / 128;
@@ -781,7 +782,7 @@ TEST_P(PrefixScanTestWithMultipleParameters, UnsignedPrefixScan)
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint intermediateBuffer = create_ssbo(numBlocks);
     GLuint outputBuffer = create_ssbo(n);
-    glsl_scan(&ctx, inputBuffer, intermediateBuffer, outputBuffer, n, variation.elementsPerThread, variation.isInclusive);
+    glsl_scan(&mGLContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, variation.elementsPerThread, variation.isInclusive);
     
     std::vector<unsigned> expectedResult(n, 0);
     scan(vec.data(), expectedResult.data(), n, n, variation.isInclusive);
@@ -796,7 +797,7 @@ TEST_P(PrefixScanTestWithMultipleParameters, SignedPrefixScan)
 {
     ScanParameterVariation variation = GetParam();
     glsl_algo_configuration conf = {ConvertType<int>(variation.type), variation.blockSize, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
     
     const unsigned n = 1024 * 1024 * 16 + 13;
     const unsigned numBlocks = (n+128-1) / 128;
@@ -804,7 +805,7 @@ TEST_P(PrefixScanTestWithMultipleParameters, SignedPrefixScan)
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint intermediateBuffer = create_ssbo(numBlocks);
     GLuint outputBuffer = create_ssbo(n);
-    glsl_scan(&ctx, inputBuffer, intermediateBuffer, outputBuffer, n, variation.elementsPerThread, variation.isInclusive);
+    glsl_scan(&mGLContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, variation.elementsPerThread, variation.isInclusive);
     
     std::vector<int> expectedResult(n, 0);
     scan(vec.data(), expectedResult.data(), n, n, variation.isInclusive);
@@ -819,7 +820,7 @@ TEST_P(PrefixScanTestWithMultipleParameters, FloatPrefixScan)
 {
     ScanParameterVariation variation = GetParam();
     glsl_algo_configuration conf = {ConvertType<float>(variation.type), variation.blockSize, 32};
-    glsl_algo_context ctx = glsl_algo_init(conf);
+    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
     
     const unsigned n = 1024 * 1024 * 16 + 13;
     const unsigned numBlocks = (n+128-1) / 128;
@@ -827,7 +828,7 @@ TEST_P(PrefixScanTestWithMultipleParameters, FloatPrefixScan)
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint intermediateBuffer = create_ssbo(numBlocks);
     GLuint outputBuffer = create_ssbo(n);
-    glsl_scan(&ctx, inputBuffer, intermediateBuffer, outputBuffer, n, variation.elementsPerThread, variation.isInclusive);
+    glsl_scan(&mGLContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, variation.elementsPerThread, variation.isInclusive);
     
     std::vector<float> expectedResult(n, 0);
     scan(vec.data(), expectedResult.data(), n, n, variation.isInclusive);

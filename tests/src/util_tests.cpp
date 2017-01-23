@@ -9,13 +9,14 @@ class UtilTest : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        init_window_and_gl_context();
+        init_window_and_gl_context(&mGLContext);
     }
     virtual void TearDown()
     {
         destroy_window_and_gl_context();
     }
 private:
+    glsl_algo_gl_context mGLContext;
 };
 
 TEST_F(UtilTest, TestSmallSSBO)

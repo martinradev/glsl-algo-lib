@@ -20,9 +20,6 @@
 "#define SCAN(v) TYPE(0, v[0], v[0]+v[1], v[0]+v[1]+v[2])\n" \
 "#define INCLUSIVE_SCAN(v) TYPE(v[0], v[0]+v[1], v[0]+v[1]+v[2], v[0]+v[1]+v[2]+v[3])\n" \
 "#endif\n" \
-"#define DEFINE_MACRO #define\n" \
-"#define IF_MACRO #if\n" \
-"#define ENDIF_MACRO #endif\n" \
 #src
 
 #endif // SHADER_UTILS_H

@@ -19,7 +19,8 @@ extern "C"{
 
 extern const char *const GLSL_ALGO_LOCAL_REDUCE_SHADER_SRC;
 extern const char *const GLSL_ALGO_LOCAL_SCAN_SHADER_SRC;
-extern const char *const GLSL_ALGO_WRITE_TO_MEMORY_SRC;
+extern const char *const GLSL_ALGO_SET_MEMORY_TO_ZERO_SRC;
+extern const char *const GLSL_ALGO_COPY_MEMORY_SRC;
 
 typedef enum
 {

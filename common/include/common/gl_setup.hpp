@@ -3,6 +3,7 @@
 
 #include <glad/glad.h>
 #include <cassert>
+#include <string>
 
 #include <glsl_algo/init.h>
 
@@ -24,5 +25,8 @@ void get_ssbo_data(GLuint ssbo, unsigned n, T *data)
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
+
+std::string get_program_binary(GLuint program);
+
 
 #endif // GL_SETUP_HPP

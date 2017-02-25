@@ -63,3 +63,17 @@ GLuint create_ssbo(unsigned n, void *data)
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     return buffer;
 }
+
+std::string get_program_binary(GLuint program)
+{
+    GLint binaryLength;
+    glGetProgramiv(program, GL_PROGRAM_BINARY_LENGTH, &binaryLength);
+    
+    std::string result(binaryLength, '0');
+    char *resultDatrPtr = &result[0];
+    
+    GLenum format;
+    glGetProgramBinary(program, binaryLength, NULL, &format, resultDatrPtr);
+    
+    return result;
+}

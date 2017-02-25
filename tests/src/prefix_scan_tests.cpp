@@ -643,7 +643,7 @@ TEST_F(PrefixScanTest, FullScanLargeUint4)
 {
     glsl_algo_configuration conf = {GARWTuint4, 1024, 32};
     glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
-
+    
     const unsigned numBlocks = 2048;
     const unsigned n = 1024 * numBlocks;
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 3u);

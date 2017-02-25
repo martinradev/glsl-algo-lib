@@ -20,34 +20,42 @@ layout(binding = 1) buffer OutputBlockArray\n
 shared SCALAR_TYPE blockWarpScan[WARP_SIZE];\n
 shared SCALAR_TYPE sharedMem[BLOCK_SIZE];\n
 
-SCALAR_TYPE warpReduce(in SCALAR_TYPE value, in uint localId, in uint width)\n
+SCALAR_TYPE warpReduce(in SCALAR_TYPE value, in uint localId, in uint laneIndex)\n
 {\n
 	sharedMem[localId] = value;\n
-	uint laneIndex = localId %% WARP_SIZE;\n
 	uint off = 1;\n
-	while (off < width)\n
+	while (off < WARP_SIZE)\n
 	{\n
 		uint prev = localId-off;\n
-		sharedMem[localId] += sharedMem[prev];\n
+		value += sharedMem[prev];
+		sharedMem[localId] = value;\n
 		off<<=1;\n
 	}\n
-	return sharedMem[localId];\n
+	return value;\n
 }\n
 
 void main()\n
 {\n
    uint threadId = gl_WorkGroupID.x * gl_WorkGroupSize.x * ElementsPerThread + gl_LocalInvocationID.x;\n
    uint localId = gl_LocalInvocationID.x;\n
-   uint laneId = localId %% WARP_SIZE;\n
-   uint warpId = localId/WARP_SIZE;\n
-   SCALAR_TYPE val = SCALAR_TYPE(0);\n
-   for (uint i = 0; i < ElementsPerThread; ++i)\n
+   uint laneId = GET_LANE_ID(localId);\n
+   uint warpId = GET_WARP_ID(localId);\n
+	 if (warpId == 0)\n
    {\n
-      TYPE item = threadId >= ArraySize ? TYPE(0) : inputArray[threadId];\n
+		 		blockWarpScan[laneId] = SCALAR_TYPE(0);\n
+	 }\n
+	 memoryBarrierShared();\n
+   barrier();\n
+   SCALAR_TYPE val = SCALAR_TYPE(0);\n
+	 uint i = 0;\n
+   while(threadId < ArraySize && i < ElementsPerThread)\n
+   {\n
+      TYPE item = inputArray[threadId];\n
       threadId += gl_WorkGroupSize.x;\n
       val += SUM(item);\n
+			++i;\n
    }\n
-   SCALAR_TYPE warpSum = warpReduce(val, localId, WARP_SIZE);\n
+   SCALAR_TYPE warpSum = warpReduce(val, localId, laneId);\n
    if (laneId == WARP_SIZE-1)\n
    {\n
      blockWarpScan[warpId] = warpSum;\n
@@ -56,12 +64,12 @@ void main()\n
    barrier();\n
    if (warpId == 0)\n
    {\n
-     val = laneId*WARP_SIZE >= BLOCK_SIZE ? SCALAR_TYPE(0) : blockWarpScan[laneId];\n
-     blockWarpScan[laneId] = warpReduce(val, laneId, WARP_SIZE);\n
-   }\n
-   if (localId == 0)\n
-   {\n
-     outputArray[gl_WorkGroupID.x] = blockWarpScan[WARP_SIZE-1];\n
+     val = blockWarpScan[laneId];\n
+     val = warpReduce(val, laneId, laneId);\n
+		 if (localId == WARP_SIZE-1)\n
+	   {\n
+	     outputArray[gl_WorkGroupID.x] = val;\n
+	   }\n
    }\n
 }\n
 );

@@ -27,39 +27,52 @@ layout(binding = 2) buffer BlockArray\n
 shared SCALAR_TYPE sharedMem[BLOCK_SIZE];\n
 shared SCALAR_TYPE blockWarpScan[WARP_SIZE];\n
 
-SCALAR_TYPE warpScan(in SCALAR_TYPE value, in uint localId, in bool isExclusive, in uint warpSize)\n
+SCALAR_TYPE warpScanInclusive(in SCALAR_TYPE value, in uint localId, in uint laneIndex, in uint warpSize)\n
 {\n
 	sharedMem[localId] = value;\n
-	uint laneIndex = localId%%warpSize;\n
 	uint off = 1;\n
 	while (off < warpSize)\n
 	{\n
 		uint prev = localId-off;\n
 		if (off <= laneIndex)\n
 		{\n
-			sharedMem[localId] += sharedMem[prev];\n
+			value += sharedMem[prev];\n
+			sharedMem[localId] = value;\n
 		}\n
 		off<<=1;\n
 	}\n
-	if (isExclusive)\n
+	return value;\n
+}\n
+
+SCALAR_TYPE warpScanExclusive(in SCALAR_TYPE value, in uint localId, in uint laneIndex, in uint warpSize)\n
+{\n
+	sharedMem[localId] = value;\n
+	uint off = 1;\n
+	while (off < warpSize)\n
 	{\n
-		return laneIndex == 0 ? 0 : sharedMem[localId-1];\n
+		uint prev = localId-off;\n
+		if (off <= laneIndex)\n
+		{\n
+			value += sharedMem[prev];\n
+			sharedMem[localId] = value;\n
+		}\n
+		off<<=1;\n
 	}\n
-	return sharedMem[localId];\n
+	return laneIndex == 0 ? 0 : sharedMem[localId-1];\n
 }\n
 
 void main()\n
 {\n
 	uint threadId = gl_WorkGroupID.x * gl_WorkGroupSize.x * ElementsPerThread + gl_LocalInvocationID.x;\n
 	uint localId = gl_LocalInvocationID.x;\n
-	uint laneId = localId%%WARP_SIZE;\n
-	uint warpId = localId/WARP_SIZE;\n
+	uint laneId = GET_LANE_ID(localId);\n
+	uint warpId = GET_WARP_ID(localId);\n
 	SCALAR_TYPE offset = AddBlockOffset ? blockArray[gl_WorkGroupID.x] : SCALAR_TYPE(0);\n
-	for (uint i = 0; i < ElementsPerThread; ++i)\n
+	for (uint i = 0; i < ElementsPerThread && threadId < ArraySize; ++i)\n
 	{\n
-			TYPE item = threadId >= ArraySize ? TYPE(0) : inputArray[threadId];\n
+			TYPE item = inputArray[threadId];\n
 			SCALAR_TYPE val = SUM(item);\n
-			SCALAR_TYPE valueInWarp = warpScan(val, localId, false, WARP_SIZE);\n
+			SCALAR_TYPE valueInWarp = warpScanInclusive(val, localId, laneId, WARP_SIZE);\n
 			
 			if (laneId == WARP_SIZE-1)\n
 			{\n
@@ -74,13 +87,17 @@ void main()\n
 			if (warpId == 0)\n
 			{\n
 				val = blockWarpScan[laneId];\n
-				blockWarpScan[laneId] = warpScan(val, laneId, true, BLOCK_SIZE / WARP_SIZE);\n
+				blockWarpScan[laneId] = warpScanExclusive(val, laneId, laneId, gl_WorkGroupSize.x / WARP_SIZE);\n
 			}\n
 			
 			memoryBarrierShared();\n
 			barrier();\n
 			
-			TYPE itemScan = IsInclusive ? INCLUSIVE_SCAN(item) : SCAN(item);
+			SCAN(itemScan, item);\n
+			if (IsInclusive)\n
+			{\n
+					TO_INCLUSIVE(itemScan, item);\n
+			}\n
 			outputArray[threadId] = TYPE(prevSharedMem+blockWarpScan[warpId]+offset)+itemScan;\n
 			offset += blockWarpScan[gl_WorkGroupSize.x/WARP_SIZE-1]+sharedMem[gl_WorkGroupSize.x-1];\n
 			memoryBarrierShared();\n

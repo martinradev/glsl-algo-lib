@@ -2,8 +2,9 @@ cmake_minimum_required(VERSION 3.0.2)
 
 if(MSVC)
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
-endif()
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
 add_definitions(-DWIN32_LEAN_AND_MEAN)
+endif()
 
 add_definitions(-DIS_BENCHMARK_BUILD)
 

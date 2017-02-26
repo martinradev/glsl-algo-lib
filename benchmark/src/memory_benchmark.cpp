@@ -26,6 +26,9 @@ static void BM_CopyMemory(benchmark::State &state) {
         
         BENCHMARK_GPU(glsl_copy_memory, glsl_copy_memory(&glContext, &ctx, inputBuffer, outputBuffer, n, readsPerThread));
     }
+
+	state.SetBytesProcessed(state.iterations() * size_t(n) * sizeof(unsigned) * size_t(2));
+
     destroy_window_and_gl_context();
 }
 

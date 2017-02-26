@@ -25,6 +25,8 @@ static void BM_FullScan(benchmark::State &state) {
         BENCHMARK_GPU(glsl_scan, glsl_scan(&glContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 1));
     }
 
+	state.SetBytesProcessed(state.iterations() * size_t(n) * sizeof(unsigned) * size_t(3));
+
     destroy_window_and_gl_context();
 }
 
@@ -50,6 +52,9 @@ static void BM_FullScanRW(benchmark::State &state)
       
         BENCHMARK_GPU(glsl_scan, glsl_scan(&glContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 1));
     }
+
+	state.SetBytesProcessed(state.iterations() * size_t(n) * sizeof(unsigned) * size_t(3));
+
     destroy_window_and_gl_context();
 }
 
@@ -73,6 +78,9 @@ static void BM_FullScanBlockSize(benchmark::State &state)
       
         BENCHMARK_GPU(glsl_scan, glsl_scan(&glContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 1));
     }
+
+	state.SetBytesProcessed(state.iterations() * size_t(n) * sizeof(unsigned) * size_t(3));
+
     destroy_window_and_gl_context();
 }
 
@@ -96,6 +104,8 @@ static void BM_FullScanElementsPerThread(benchmark::State &state) {
         BENCHMARK_GPU(glsl_scan, glsl_scan(&glContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, elementsPerThread, 1));
     }
 
+	state.SetBytesProcessed(state.iterations() * size_t(n) * sizeof(unsigned) * size_t(3));
+
     destroy_window_and_gl_context();
 }
 
@@ -109,7 +119,7 @@ static void BM_FullScanMultipleRanges(benchmark::State &state)
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint intermediateBuffer = create_ssbo(1024*128);
     GLuint outputBuffer = create_ssbo(n);
-    
+
     while (state.KeepRunning())
     {
         GLSL_ALGO_READ_WRITE_TYPE type = static_cast<GLSL_ALGO_READ_WRITE_TYPE>(state.range(0));
@@ -119,7 +129,10 @@ static void BM_FullScanMultipleRanges(benchmark::State &state)
         glsl_algo_context ctx = glsl_algo_init(&glContext, conf);
       
         BENCHMARK_GPU(glsl_scan, glsl_scan(&glContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, readsPerThread, 1));
+
     }
+
+	state.SetBytesProcessed(state.iterations() * size_t(n) * sizeof(unsigned) * size_t(3));
     destroy_window_and_gl_context();
 }
 
@@ -144,4 +157,4 @@ static void GenerateFullBenchmark(benchmark::internal::Benchmark* b) {
     }
 }
 
-BENCHMARK(BM_FullScanMultipleRanges)->Apply(GenerateFullBenchmark);
+BENCHMARK(BM_FullScanMultipleRanges)->Apply(GenerateFullBenchmark)->UseManualTime();

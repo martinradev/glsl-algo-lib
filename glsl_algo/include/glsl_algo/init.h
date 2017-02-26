@@ -17,6 +17,16 @@ exit(1);
 extern "C"{
 #endif
 
+#ifdef IS_BENCHMARK_BUILD
+
+#define GENERATE_BENCHMARK_HELP_VARIABLES(type, name) type GLuint name##_Query; \
+type GLuint64 name##_Elapsed
+
+GENERATE_BENCHMARK_HELP_VARIABLES(extern, glsl_copy_memory);
+GENERATE_BENCHMARK_HELP_VARIABLES(extern, glsl_scan);
+
+#endif
+
 extern const char *const GLSL_ALGO_LOCAL_REDUCE_SHADER_SRC;
 extern const char *const GLSL_ALGO_LOCAL_SCAN_SHADER_SRC;
 extern const char *const GLSL_ALGO_SET_MEMORY_TO_ZERO_SRC;
@@ -139,6 +149,14 @@ typedef struct
     
     PFNGLDISPATCHCOMPUTEPROC glDispatchCompute;
     PFNGLMEMORYBARRIERPROC glMemoryBarrier;
+    
+    // required from the benchmark helper
+    PFNGLGENQUERIESPROC glGenQueries;
+    PFNGLBEGINQUERYPROC glBeginQuery;
+    PFNGLENDQUERYPROC glEndQuery;
+    PFNGLGETQUERYOBJECTIVPROC glGetQueryObjectiv;
+    PFNGLGETQUERYOBJECTUI64VPROC glGetQueryObjectui64v;
+    
 } glsl_algo_gl_context;
 
 typedef struct

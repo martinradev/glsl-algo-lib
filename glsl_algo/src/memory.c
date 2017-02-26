@@ -1,5 +1,5 @@
 #include "glsl_algo/memory.h"
-
+#include "benchmark_helper.h"
 #include <assert.h>
 #include <stdio.h>
 
@@ -52,7 +52,7 @@ void glsl_copy_memory(const glsl_algo_gl_context *gl,
     gl->glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, input_buffer);
     gl->glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, output_buffer);
     
-    gl->glDispatchCompute(gridSize, 1, 1);
+    BENCHMARK_GPU_CALL(gl, gl->glDispatchCompute(gridSize, 1, 1), glsl_copy_memory);
     
     gl->glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
     gl->glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);

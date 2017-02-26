@@ -1,8 +1,21 @@
 #include "glsl_algo/init.h"
+#include "benchmark_helper.h"
 
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef IS_BENCHMARK_BUILD
+GENERATE_BENCHMARK_HELP_VARIABLES(, glsl_copy_memory);
+GENERATE_BENCHMARK_HELP_VARIABLES(, glsl_scan);
+
+#define INIT_BENCHMARK_QUERY(gl, name) gl->glGenQueries(1, &name##_Query)
+
+#else
+
+#define INIT_BENCHMARK_QUERY(gl, name)
+
+#endif
 
 static GLuint create_compute_program(const glsl_algo_gl_context *gl_context, const char *source, int len)
 {
@@ -73,6 +86,9 @@ glsl_algo_context glsl_algo_init(const glsl_algo_gl_context *gl_context, glsl_al
     shaderSourceLen = snprintf(buffer, buffer_max_size, GLSL_ALGO_COPY_MEMORY_SRC, type_name, scalar_type_name, conf.local_block_size, num_elements, conf.warp_size);
     assert(shaderSourceLen >= 0 && shaderSourceLen < buffer_max_size);
     ctx.copy_buffer_program = create_compute_program(gl_context, buffer, shaderSourceLen);
+    
+    INIT_BENCHMARK_QUERY(gl_context, glsl_scan);
+    INIT_BENCHMARK_QUERY(gl_context, glsl_copy_memory);
 
     free(buffer);
     

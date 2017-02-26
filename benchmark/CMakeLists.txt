@@ -15,12 +15,14 @@ else()
         message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
+set(CMAKE_BUILD_TYPE Release)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../deps/benchmark ${CMAKE_CURRENT_BINARY_DIR}/benchmark)
 
 if(NOT TARGET glslalgo_common)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../common ${CMAKE_CURRENT_BINARY_DIR}/common)
 endif()
 
+add_definitions(-DIS_BENCHMARK_BUILD)
 if(NOT TARGET glslalgo)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../glsl_algo ${CMAKE_CURRENT_BINARY_DIR}/glsl_algo)
 endif()

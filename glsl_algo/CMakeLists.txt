@@ -5,6 +5,10 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
 endif()
 add_definitions(-DWIN32_LEAN_AND_MEAN)
 
+add_definitions(-DIS_BENCHMARK_BUILD)
+
+set(CMAKE_BUILD_TYPE Release)
+
 file(GLOB SOURCES "src/*.c" "src/shaders/*.c")
 
 add_library(glslalgo STATIC ${SOURCES})

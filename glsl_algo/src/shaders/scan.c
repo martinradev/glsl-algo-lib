@@ -1,4 +1,4 @@
-#include "glsl_algo/shader_utils.h"
+#include "../shader_utils.h"
 
 const char *const GLSL_ALGO_LOCAL_SCAN_SHADER_SRC = 
 SHADER(450,

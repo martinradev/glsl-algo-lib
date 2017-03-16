@@ -20,9 +20,12 @@ static void BM_FullScan(benchmark::State &state) {
     GLuint intermediateBuffer = create_ssbo(numBlocks);
     GLuint outputBuffer = create_ssbo(n);
     
+    GLuint queryObject;
+    glGenQueries(1, &queryObject);
+    
     while (state.KeepRunning())
     {
-        BENCHMARK_GPU(glsl_scan, glsl_scan(&glContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 1));
+        BENCHMARK_GPU(glsl_scan(&glContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 1), queryObject);
     }
 
 	state.SetBytesProcessed(state.iterations() * size_t(n) * sizeof(unsigned) * size_t(3));
@@ -42,6 +45,9 @@ static void BM_FullScanRW(benchmark::State &state)
     GLuint intermediateBuffer = create_ssbo(numBlocks);
     GLuint outputBuffer = create_ssbo(n);
     
+    GLuint queryObject;
+    glGenQueries(1, &queryObject);
+    
     while (state.KeepRunning())
     {
         
@@ -50,7 +56,7 @@ static void BM_FullScanRW(benchmark::State &state)
         glsl_algo_configuration conf = {dataType, 1024, 32};
         glsl_algo_context ctx = glsl_algo_init(&glContext, conf);
       
-        BENCHMARK_GPU(glsl_scan, glsl_scan(&glContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 1));
+        BENCHMARK_GPU(glsl_scan(&glContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 1), queryObject);
     }
 
 	state.SetBytesProcessed(state.iterations() * size_t(n) * sizeof(unsigned) * size_t(3));
@@ -70,13 +76,16 @@ static void BM_FullScanBlockSize(benchmark::State &state)
     GLuint intermediateBuffer = create_ssbo(numBlocks);
     GLuint outputBuffer = create_ssbo(n);
     
+    GLuint queryObject;
+    glGenQueries(1, &queryObject);
+    
     while (state.KeepRunning())
     {
         unsigned int blockSize = static_cast<unsigned int>(state.range(0));
         glsl_algo_configuration conf = {GARWTint1, blockSize, 32};
         glsl_algo_context ctx = glsl_algo_init(&glContext, conf);
       
-        BENCHMARK_GPU(glsl_scan, glsl_scan(&glContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 1));
+        BENCHMARK_GPU(glsl_scan(&glContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 1), queryObject);
     }
 
 	state.SetBytesProcessed(state.iterations() * size_t(n) * sizeof(unsigned) * size_t(3));
@@ -98,10 +107,13 @@ static void BM_FullScanElementsPerThread(benchmark::State &state) {
     GLuint intermediateBuffer = create_ssbo(numBlocks);
     GLuint outputBuffer = create_ssbo(n);
     
+    GLuint queryObject;
+    glGenQueries(1, &queryObject);
+    
     while (state.KeepRunning())
     {
         unsigned int elementsPerThread = static_cast<unsigned int>(state.range(0));
-        BENCHMARK_GPU(glsl_scan, glsl_scan(&glContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, elementsPerThread, 1));
+        BENCHMARK_GPU(glsl_scan(&glContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, elementsPerThread, 1), queryObject);
     }
 
 	state.SetBytesProcessed(state.iterations() * size_t(n) * sizeof(unsigned) * size_t(3));
@@ -114,12 +126,15 @@ static void BM_FullScanMultipleRanges(benchmark::State &state)
     glsl_algo_gl_context glContext;
     init_window_and_gl_context(&glContext);
 
-    const unsigned n = 8 * 1024 * 1024;
+    const unsigned n = 16 * 1024 * 1024;
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 3u);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint intermediateBuffer = create_ssbo(1024*128);
     GLuint outputBuffer = create_ssbo(n);
-
+    
+    GLuint queryObject;
+    glGenQueries(1, &queryObject);
+    
     while (state.KeepRunning())
     {
         GLSL_ALGO_READ_WRITE_TYPE type = static_cast<GLSL_ALGO_READ_WRITE_TYPE>(state.range(0));
@@ -128,7 +143,7 @@ static void BM_FullScanMultipleRanges(benchmark::State &state)
         glsl_algo_configuration conf = {type, blockSize, 32};
         glsl_algo_context ctx = glsl_algo_init(&glContext, conf);
       
-        BENCHMARK_GPU(glsl_scan, glsl_scan(&glContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, readsPerThread, 1));
+        BENCHMARK_GPU(glsl_scan(&glContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, readsPerThread, 1), queryObject);
 
     }
 
@@ -149,7 +164,7 @@ static void GenerateFullBenchmark(benchmark::internal::Benchmark* b) {
         GLSL_ALGO_READ_WRITE_TYPE type = rwTypes[t];
         for (unsigned int blockSize = 128u; blockSize <= 1024u; blockSize += 128u)
         {
-            for (unsigned int readsPerThread = 1u; readsPerThread <= 32u; readsPerThread*=2)
+            for (unsigned int readsPerThread = 1u; readsPerThread <= 128u; readsPerThread*=2)
             {
                 b->Args({static_cast<int>(type), static_cast<int>(blockSize), static_cast<int>(readsPerThread)});
             }

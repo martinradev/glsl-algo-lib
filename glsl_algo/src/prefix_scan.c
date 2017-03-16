@@ -112,11 +112,9 @@ void glsl_scan(const glsl_algo_gl_context *gl,
 {
     unsigned elements_per_block = rw_per_thread * ctx->conf.local_block_size * glsl_algo_get_rw_num_elements(ctx->conf.rw_type);
     unsigned num_blocks = (num_elements + elements_per_block - 1u) / elements_per_block;
-	BENCHMARK_GPU_CALL(gl,
 		glsl_local_reduce(gl, ctx, input_buffer, intermediate_buffer, num_elements, elements_per_block);
 		gl->glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 		glsl_local_scan(gl, ctx, intermediate_buffer, intermediate_buffer, num_blocks, num_blocks, 0);
 		gl->glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-		glsl_local_scan_and_add_block(gl, ctx, input_buffer, intermediate_buffer, output_buffer, num_elements, elements_per_block, is_inclusive)
-		, glsl_scan);
+		glsl_local_scan_and_add_block(gl, ctx, input_buffer, intermediate_buffer, output_buffer, num_elements, elements_per_block, is_inclusive);
 }

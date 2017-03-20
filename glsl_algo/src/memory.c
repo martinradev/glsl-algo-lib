@@ -1,5 +1,4 @@
 #include "glsl_algo/memory.h"
-#include "benchmark_helper.h"
 #include <assert.h>
 #include <stdio.h>
 

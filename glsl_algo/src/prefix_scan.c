@@ -1,5 +1,4 @@
 #include "glsl_algo/prefix_scan.h"
-#include "benchmark_helper.h"
 #include <assert.h>
 #include <stdio.h>
 

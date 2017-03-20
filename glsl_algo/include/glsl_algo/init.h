@@ -30,6 +30,7 @@ extern const char *const GLSL_ALGO_LOCAL_REDUCE_SHADER_SRC;
 extern const char *const GLSL_ALGO_LOCAL_SCAN_SHADER_SRC;
 extern const char *const GLSL_ALGO_SET_MEMORY_TO_ZERO_SRC;
 extern const char *const GLSL_ALGO_COPY_MEMORY_SRC;
+extern const char *const GLSL_ALGO_RADIX_SORT_GATHER_SRC;
 
 typedef enum
 {
@@ -126,6 +127,69 @@ static inline GLSL_ALGO_READ_WRITE_TYPE get_equivalent_scalar_type(GLSL_ALGO_REA
     return GARWTundefined;
 }
 
+static inline GLSL_ALGO_READ_WRITE_TYPE get_equivalent_vector_type(GLSL_ALGO_READ_WRITE_TYPE type, unsigned elements)
+{
+    switch(elements)
+    {
+        case 1:
+        case 2:
+        case 4:
+            break;
+        default:
+            GLSL_ALGO_ERROR("Vector size can be only of size 1,2 and 4.");
+    }
+    
+    switch(type)
+    {
+        case GARWTfloat1:
+        case GARWTfloat2:
+        case GARWTfloat4:
+        {
+            switch(elements)
+            {
+                case 1:
+                    return GARWTfloat1;
+                case 2:
+                    return GARWTfloat2;
+                case 4:
+                    return GARWTfloat4;
+            }
+            break;
+        }
+        case GARWTint1:
+        case GARWTint2:
+        case GARWTint4:
+        {
+            switch(elements)
+            {
+                case 1:
+                    return GARWTint1;
+                case 2:
+                    return GARWTint2;
+                case 4:
+                    return GARWTint4;
+            }
+            break;
+        }
+        case GARWTuint1:
+        case GARWTuint2:
+        case GARWTuint4:
+        {
+            switch(elements)
+            {
+                case 1:
+                    return GARWTuint1;
+                case 2:
+                    return GARWTuint2;
+                case 4:
+                    return GARWTuint4;
+            }
+            break;
+        }
+    }
+    return GARWTundefined;
+}
+
 typedef struct
 {
     PFNGLCREATEPROGRAMPROC glCreateProgram;
@@ -156,6 +220,7 @@ typedef struct
     GLSL_ALGO_READ_WRITE_TYPE rw_type;
     unsigned local_block_size;
     unsigned warp_size;
+    unsigned radix_size;
 } glsl_algo_configuration;
 
 typedef struct
@@ -165,6 +230,7 @@ typedef struct
     GLuint scan_program;
     GLuint set_value_program;
     GLuint copy_buffer_program;
+    GLuint radix_sort_gather_program;
 } glsl_algo_context;
 
 glsl_algo_context glsl_algo_init(const glsl_algo_gl_context *gl_context, glsl_algo_configuration conf);

@@ -100,7 +100,6 @@ void main()\n
 			}\n
 			outputArray[threadId] = TYPE(prevSharedMem+blockWarpScan[warpId]+offset)+itemScan;\n
 			offset += blockWarpScan[gl_WorkGroupSize.x/WARP_SIZE-1]+sharedMem[gl_WorkGroupSize.x-1];\n
-			memoryBarrierShared();\n
 			barrier();\n
 			threadId += gl_WorkGroupSize.x;\n
 	}\n

@@ -31,6 +31,7 @@ extern const char *const GLSL_ALGO_LOCAL_SCAN_SHADER_SRC;
 extern const char *const GLSL_ALGO_SET_MEMORY_TO_ZERO_SRC;
 extern const char *const GLSL_ALGO_COPY_MEMORY_SRC;
 extern const char *const GLSL_ALGO_RADIX_SORT_GATHER_SRC;
+extern const char *const GLSL_ALGO_RADIX_SORT_SCATTER_SRC;
 
 typedef enum
 {
@@ -231,6 +232,7 @@ typedef struct
     GLuint set_value_program;
     GLuint copy_buffer_program;
     GLuint radix_sort_gather_program;
+    GLuint radix_sort_scatter_program;
 } glsl_algo_context;
 
 glsl_algo_context glsl_algo_init(const glsl_algo_gl_context *gl_context, glsl_algo_configuration conf);

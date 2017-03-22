@@ -47,7 +47,7 @@ static GLuint create_compute_program(const glsl_algo_gl_context *gl_context, con
 
 glsl_algo_context glsl_algo_init(const glsl_algo_gl_context *gl_context, glsl_algo_configuration conf)
 {
-    const int buffer_max_size = 4096;
+    const int buffer_max_size = 3*4096;
     glsl_algo_context ctx;
     ctx.conf = conf;
     
@@ -79,6 +79,10 @@ glsl_algo_context glsl_algo_init(const glsl_algo_gl_context *gl_context, glsl_al
     shaderSourceLen = snprintf(buffer, buffer_max_size, GLSL_ALGO_RADIX_SORT_GATHER_SRC, radixVectorTypeName, "int", conf.local_block_size, num_elements, conf.warp_size, conf.radix_size);
     assert(shaderSourceLen >= 0 && shaderSourceLen < buffer_max_size);
     ctx.radix_sort_gather_program = create_compute_program(gl_context, buffer, shaderSourceLen);
+
+    shaderSourceLen = snprintf(buffer, buffer_max_size, GLSL_ALGO_RADIX_SORT_SCATTER_SRC, radixVectorTypeName, "int", conf.local_block_size, num_elements, conf.warp_size, conf.radix_size);
+    assert(shaderSourceLen >= 0 && shaderSourceLen < buffer_max_size);
+    ctx.radix_sort_scatter_program = create_compute_program(gl_context, buffer, shaderSourceLen);
 
     free(buffer);
     

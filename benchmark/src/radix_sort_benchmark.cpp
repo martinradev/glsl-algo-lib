@@ -31,10 +31,9 @@ static void BM_RadixSortMultipleRanges(benchmark::State &state)
         glsl_algo_context ctx = glsl_algo_init(&glContext, conf);
       
         BENCHMARK_GPU(glsl_radix_sort(&glContext, &ctx, inputBuffer, radixBuffer, pingPongBuffer, outputBuffer, n, readsPerThread), queryObject);
-
     }
 
-	state.SetBytesProcessed(state.iterations() * size_t(n) * sizeof(unsigned) * size_t(3));
+	state.SetItemsProcessed(state.iterations() * n);
     destroy_window_and_gl_context();
 }
 
@@ -58,3 +57,45 @@ static void GenerateFullBenchmark(benchmark::internal::Benchmark* b) {
 }
 
 BENCHMARK(BM_RadixSortMultipleRanges)->Apply(GenerateFullBenchmark)->UseManualTime();
+
+
+static void BM_RadixSortBenchmarkScalability(benchmark::State &state)
+{
+	glsl_algo_gl_context glContext;
+	init_window_and_gl_context(&glContext);
+
+	glsl_algo_configuration conf = { GARWTint2, 256, 32, 1 };
+	glsl_algo_context ctx = glsl_algo_init(&glContext, conf);
+
+	const unsigned n = state.range(0);
+	std::vector<int> vec = generateIntegralRandomVector(n, 0, 1 << 30);
+	GLuint inputBuffer = create_ssbo(n, vec.data());
+	GLuint pingPongBuffer = create_ssbo(n);
+
+	const unsigned elementsPerBlock = 2 * 256 * 32;
+	const unsigned radixBufferSize = 2 * (n + elementsPerBlock - 1) / elementsPerBlock;
+	GLuint radixBuffer = create_ssbo(radixBufferSize);
+	GLuint outputBuffer = create_ssbo(n);
+
+	GLuint queryObject;
+	glGenQueries(1, &queryObject);
+
+	while (state.KeepRunning())
+	{
+		BENCHMARK_GPU(glsl_radix_sort(&glContext, &ctx, inputBuffer, radixBuffer, pingPongBuffer, outputBuffer, n, 32), queryObject);
+	}
+
+	state.SetItemsProcessed(state.iterations() * n);
+	destroy_window_and_gl_context();
+}
+
+static void GenerateScalabilityBenchmark(benchmark::internal::Benchmark* b) {
+	const unsigned maxn = 128 * 1024 * 1024;
+	const unsigned step = 4 *32 * 1024;
+	for (int r = 4 *32*1024; r <= maxn; r += step)
+	{
+		b->Args({r});
+	}
+}
+
+BENCHMARK(BM_RadixSortBenchmarkScalability)->Apply(GenerateScalabilityBenchmark)->UseManualTime();

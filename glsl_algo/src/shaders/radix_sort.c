@@ -129,6 +129,7 @@ layout(binding = 2) buffer BlockArray\n
 
 shared SCALAR_TYPE sharedMem[BLOCK_SIZE];\n
 shared SCALAR_TYPE blockWarpScan[WARP_SIZE];\n
+shared int sharedOffsets[1<<RADIX_SIZE];\n
 
 SCALAR_TYPE warpScanInclusive(in SCALAR_TYPE value, in uint localId, in uint laneIndex, in uint warpSize)\n
 {\n
@@ -216,13 +217,15 @@ void main()\n
 		uint laneId = GET_LANE_ID(localId);\n
 		uint warpId = GET_WARP_ID(localId);\n
 		
-		int offsets[1<<RADIX_SIZE];\n
-		offsets[0] = gl_WorkGroupID.x == 0 ? 0 : blockArray[gl_WorkGroupID.x-1];\n
-		for (uint j = 1; j < (1<<RADIX_SIZE); ++j)
+		if (localId < (1<<RADIX_SIZE))\n
 		{\n
-				offsets[j] = blockArray[gl_NumWorkGroups.x*j + gl_WorkGroupID.x - 1];\n
+				uint index = max(0, gl_NumWorkGroups.x*localId + gl_WorkGroupID.x - 1);\n
+				sharedOffsets[localId] = blockArray[index];\n
 		}\n
 		
+		memoryBarrierShared();\n
+		barrier();\n
+
 		int val[1<<RADIX_SIZE];\n
 		
 		for (uint i = 0; i < ElementsPerThread && threadId < ArraySize; ++i)\n
@@ -239,16 +242,24 @@ void main()\n
 				int threadOffset;\n
 				int sumTmp;\n
 				blockScan(val[0], localId, laneId, warpId, threadOffset, sumTmp);\n
-				threadOffset += offsets[0];\n
-				offsets[0] += sumTmp;\n
+				threadOffset += sharedOffsets[0];\n
+				barrier();\n
+				if (localId==0)\n
+				{\n
+						sharedOffsets[0] += sumTmp;\n
+				}\n
 				scatter(threadOffset, 0, item, qq);\n
 				
 				for (int j = 1; j < (1<<RADIX_SIZE); ++j)\n
 				{\n
 						barrier();\n
 						blockScan(val[j], localId, laneId, warpId, threadOffset, sumTmp);\n
-						threadOffset += offsets[j];\n
-						offsets[j] += sumTmp;\n
+						threadOffset += sharedOffsets[j];\n
+						barrier();\n
+						if (localId==0)\n
+						{\n
+						sharedOffsets[j] += sumTmp;\n
+						}\n
 						scatter(threadOffset, j, item, qq);\n
 				}\n
 				threadId += gl_WorkGroupSize.x;\n

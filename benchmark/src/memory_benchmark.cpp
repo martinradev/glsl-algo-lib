@@ -24,7 +24,7 @@ static void BM_CopyMemory(benchmark::State &state) {
         GLSL_ALGO_READ_WRITE_TYPE type = static_cast<GLSL_ALGO_READ_WRITE_TYPE>(state.range(0));
         unsigned int blockSize = static_cast<unsigned int>(state.range(1));
         unsigned int readsPerThread = static_cast<unsigned int>(state.range(2));
-        glsl_algo_configuration conf = {type, blockSize, 32};
+        glsl_algo_configuration conf = {type, blockSize, 32, 1, 1};
         glsl_algo_context ctx = glsl_algo_init(&glContext, conf);
         
         BENCHMARK_GPU(glsl_copy_memory(&glContext, &ctx, inputBuffer, outputBuffer, n, readsPerThread), queryObject);
@@ -73,7 +73,7 @@ static void BM_SaturationBenchmark(benchmark::State &state)
   
 	while (state.KeepRunning())
 	{
-		glsl_algo_configuration conf = { SaturationRWSize, SaturationBlockSize, 32 };
+		glsl_algo_configuration conf = { SaturationRWSize, SaturationBlockSize, 32, 1, 1};
 		glsl_algo_context ctx = glsl_algo_init(&glContext, conf);
 
 		BENCHMARK_GPU(glsl_copy_memory(&glContext, &ctx, inputBuffer, outputBuffer, n, SaturationElementStep), queryObject);

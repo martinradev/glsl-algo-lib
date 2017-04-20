@@ -10,6 +10,7 @@
 "#define RADIX_SIZE %u\n" \
 "#define GET_LANE_ID(t) (t&(WARP_SIZE-1u))\n" \
 "#define GET_WARP_ID(t) (t/WARP_SIZE)\n" \
+"#define RADIX_SORT_NUM_PASSES %u\n" \
 "#if ELEMENTS_PER_THREAD == 1\n" \
 "#define SUM(v) v\n" \
 "#define SCAN(out, v) TYPE out = TYPE(0);\n" \

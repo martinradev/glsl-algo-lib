@@ -27,7 +27,7 @@ static void BM_RadixSortMultipleRanges(benchmark::State &state)
         unsigned int blockSize = static_cast<unsigned int>(state.range(1));
         unsigned int readsPerThread = static_cast<unsigned int>(state.range(2));
         unsigned int radixSize = static_cast<unsigned int>(state.range(3));
-        glsl_algo_configuration conf = {type, blockSize, 32, radixSize};
+        glsl_algo_configuration conf = {type, blockSize, 32, radixSize, readsPerThread};
         glsl_algo_context ctx = glsl_algo_init(&glContext, conf);
       
         BENCHMARK_GPU(glsl_radix_sort(&glContext, &ctx, inputBuffer, radixBuffer, pingPongBuffer, outputBuffer, n, readsPerThread), queryObject);
@@ -47,7 +47,7 @@ static void GenerateFullBenchmark(benchmark::internal::Benchmark* b) {
             GLSL_ALGO_READ_WRITE_TYPE type = rwTypes[t];
             for (unsigned int blockSize = 128u; blockSize <= 1024u; blockSize += 128u)
             {
-                for (unsigned int readsPerThread = 1u; readsPerThread <= 128u; readsPerThread*=2)
+                for (unsigned int readsPerThread = 1u; readsPerThread <= 8u; readsPerThread*=2)
                 {
                     b->Args({static_cast<int>(type), static_cast<int>(blockSize), static_cast<int>(readsPerThread), static_cast<int>(r)});
                 }
@@ -64,7 +64,7 @@ static void BM_RadixSortBenchmarkScalability(benchmark::State &state)
 	glsl_algo_gl_context glContext;
 	init_window_and_gl_context(&glContext);
 
-	glsl_algo_configuration conf = { GARWTint2, 256, 32, 1 };
+	glsl_algo_configuration conf = { GARWTint2, 256, 32, 1, 1};
 	glsl_algo_context ctx = glsl_algo_init(&glContext, conf);
 
 	const unsigned n = state.range(0);

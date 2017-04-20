@@ -21,7 +21,7 @@ protected:
 
 TEST_F(MemoryTest, SetBufferToZero)
 {
-    glsl_algo_configuration conf = {GARWTint1, 256, 32};
+    glsl_algo_configuration conf = {GARWTint1, 256, 32, 1, 1};
     glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
     const unsigned n = 1024 * 1024;
@@ -40,7 +40,7 @@ TEST_F(MemoryTest, SetBufferToZero)
 
 TEST_F(MemoryTest, SetBufferToZeroSmallArray)
 {
-    glsl_algo_configuration conf = {GARWTuint4, 384, 32};
+    glsl_algo_configuration conf = {GARWTuint4, 384, 32, 1, 1};
     glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
     const unsigned n = 256;
@@ -59,7 +59,7 @@ TEST_F(MemoryTest, SetBufferToZeroSmallArray)
 
 TEST_F(MemoryTest, SetBufferToZeroMultipleElementsPerThread)
 {
-    glsl_algo_configuration conf = {GARWTint2, 1024, 32};
+    glsl_algo_configuration conf = {GARWTint2, 1024, 32, 1, 1};
     glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
     const unsigned n = 1024 * 1024;
@@ -78,7 +78,7 @@ TEST_F(MemoryTest, SetBufferToZeroMultipleElementsPerThread)
 
 TEST_F(MemoryTest, CopyBuffer)
 {
-    glsl_algo_configuration conf = {GARWTint1, 256, 32};
+    glsl_algo_configuration conf = {GARWTint1, 256, 32, 1, 1};
     glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
     const unsigned n = 1024 * 1024;
@@ -96,7 +96,7 @@ TEST_F(MemoryTest, CopyBuffer)
 
 TEST_F(MemoryTest, CopyBufferMultipleElementsPerThread)
 {
-    glsl_algo_configuration conf = {GARWTint1, 256, 32};
+    glsl_algo_configuration conf = {GARWTint1, 256, 32, 1, 1};
     glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
     const unsigned n = 1024 * 1024;
@@ -114,7 +114,7 @@ TEST_F(MemoryTest, CopyBufferMultipleElementsPerThread)
 
 TEST_F(MemoryTest, CopyBufferUint4)
 {
-    glsl_algo_configuration conf = {GARWTuint4, 512, 32};
+    glsl_algo_configuration conf = {GARWTuint4, 512, 32, 1, 1};
     glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
     const unsigned n = 1024 * 1024;
@@ -132,7 +132,7 @@ TEST_F(MemoryTest, CopyBufferUint4)
 
 TEST_F(MemoryTest, CopyBufferFloat2)
 {
-    glsl_algo_configuration conf = {GARWTfloat2, 512, 32};
+    glsl_algo_configuration conf = {GARWTfloat2, 512, 32, 1, 1};
     glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
     const unsigned n = 1024 * 1024;

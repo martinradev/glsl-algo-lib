@@ -76,18 +76,18 @@ void main()\n
 	 memoryBarrierShared();\n
    barrier();\n
    int val[1<<RADIX_SIZE];\n
-	 for (int i = 0; i < (1<<RADIX_SIZE); ++i) val[i] = 0;\n
-	 uint i = 0;\n
+   for (int i = 0; i < (1<<RADIX_SIZE); ++i) val[i] = 0;\n
+   uint i = 0;\n
    while(threadId < ArraySize && i < ElementsPerThread)\n
    {\n
       TYPE item = inputArray[threadId];\n
       threadId += gl_WorkGroupSize.x;\n
       TYPE qq = decode(item, RadixOffset);\n
-			for (uint j = 0; j < ELEMENTS_PER_THREAD; ++j)\n
-			{\n
-					val[READ_INDEX(qq,j)] += 1;\n
-			}\n
-			++i;\n
+	  for (uint j = 0; j < ELEMENTS_PER_THREAD; ++j)\n
+	  {\n
+		val[READ_INDEX(qq,j)] += 1;\n
+	  }\n
+	  ++i;\n
    }\n
 	 
 	 uint offset = 0u;\n
@@ -114,7 +114,7 @@ layout(location=2) uniform uint RadixOffset;\n
 
 layout(binding = 0) buffer InputArray\n
 {\n
-	readonly TYPE inputArray[];\n
+	readonly SCALAR_TYPE inputArray[];\n
 };\n
 
 layout(binding = 1) buffer OutputArray\n
@@ -127,9 +127,13 @@ layout(binding = 2) buffer BlockArray\n
 	readonly SCALAR_TYPE blockArray[];\n
 };\n
 
+const uint N_PASSES = RADIX_SORT_NUM_PASSES;
+
 shared SCALAR_TYPE sharedMem[BLOCK_SIZE];\n
 shared SCALAR_TYPE blockWarpScan[WARP_SIZE];\n
 shared int sharedOffsets[1<<RADIX_SIZE];\n
+shared SCALAR_TYPE sharedReadInput[BLOCK_SIZE*N_PASSES*ELEMENTS_PER_THREAD];\n
+shared uint sharedOutIndices[BLOCK_SIZE*N_PASSES*ELEMENTS_PER_THREAD];\n
 
 SCALAR_TYPE warpScanInclusive(in SCALAR_TYPE value, in uint localId, in uint laneIndex, in uint warpSize)\n
 {\n
@@ -165,9 +169,9 @@ SCALAR_TYPE warpScanExclusive(in SCALAR_TYPE value, in uint localId, in uint lan
 	return laneIndex == 0 ? 0 : sharedMem[localId-1];\n
 }\n
 
-TYPE decode(in TYPE item, in uint radixOffset)\n
+SCALAR_TYPE decode(in SCALAR_TYPE item, in uint radixOffset)\n
 {\n
-    return (item >> radixOffset) & TYPE((1<<RADIX_SIZE)-1);\n
+    return (item >> radixOffset) & SCALAR_TYPE((1<<RADIX_SIZE)-1);\n
 }\n
 
 void blockScan(in int val, in uint localId, in uint laneId, in uint warpId, out int threadOffset, out int sum)\n
@@ -219,51 +223,85 @@ void main()\n
 		
 		if (localId < (1<<RADIX_SIZE))\n
 		{\n
-				uint index = max(0, gl_NumWorkGroups.x*localId + gl_WorkGroupID.x - 1);\n
-				sharedOffsets[localId] = blockArray[index];\n
+				int index = int(gl_NumWorkGroups.x*localId + gl_WorkGroupID.x - 1);\n
+				sharedOffsets[localId] = index < 0 ? 0 : blockArray[index];\n
+		}\n
+		
+		memoryBarrierShared();\n
+		barrier();\n
+		
+		for (uint i = 0; i < N_PASSES && threadId < ArraySize; ++i)\n
+		{\n
+			for (uint j = 0; j < ELEMENTS_PER_THREAD; ++j)\n
+			{\n
+				sharedReadInput[j+(localId+i*gl_WorkGroupSize.x)*ELEMENTS_PER_THREAD] = inputArray[j+threadId*ELEMENTS_PER_THREAD];\n
+			}\n
+			threadId += gl_WorkGroupSize.x;\n
 		}\n
 		
 		memoryBarrierShared();\n
 		barrier();\n
 
-		int val[1<<RADIX_SIZE];\n
-		
-		for (uint i = 0; i < ElementsPerThread && threadId < ArraySize; ++i)\n
+		SCALAR_TYPE tmp[N_PASSES*ELEMENTS_PER_THREAD];\n
+		for (uint i = 0; i < N_PASSES; ++i)\n
 		{\n
-		 	 	for (int j = 0; j < (1<<RADIX_SIZE); ++j) val[j] = 0;\n
-
-				TYPE item = inputArray[threadId];\n
-				TYPE qq = decode(item, RadixOffset);\n
-				for (uint j = 0; j < ELEMENTS_PER_THREAD; ++j)\n
-				{\n
-						val[READ_INDEX(qq,j)] += 1;\n
-				}\n
-
-				int threadOffset;\n
-				int sumTmp;\n
-				blockScan(val[0], localId, laneId, warpId, threadOffset, sumTmp);\n
-				threadOffset += sharedOffsets[0];\n
-				barrier();\n
-				if (localId==0)\n
-				{\n
-						sharedOffsets[0] += sumTmp;\n
-				}\n
-				scatter(threadOffset, 0, item, qq);\n
-				
-				for (int j = 1; j < (1<<RADIX_SIZE); ++j)\n
-				{\n
-						barrier();\n
-						blockScan(val[j], localId, laneId, warpId, threadOffset, sumTmp);\n
-						threadOffset += sharedOffsets[j];\n
-						barrier();\n
-						if (localId==0)\n
-						{\n
-						sharedOffsets[j] += sumTmp;\n
-						}\n
-						scatter(threadOffset, j, item, qq);\n
-				}\n
-				threadId += gl_WorkGroupSize.x;\n
-				barrier();\n
+			for (uint j = 0; j < ELEMENTS_PER_THREAD; ++j)\n
+			{\n
+				tmp[i*ELEMENTS_PER_THREAD+j] = sharedReadInput[(localId*N_PASSES+i)*ELEMENTS_PER_THREAD + j];\n
+			}\n
+		}\n
+		
+		int val[1<<RADIX_SIZE];\n
+		for (uint i = 0; i < (1<<RADIX_SIZE); ++i) val[i] = 0;\n
+		
+		for (uint i = 0; i < N_PASSES; ++i)\n
+		{\n
+			for (uint j = 0; j < ELEMENTS_PER_THREAD; ++j)\n
+			{\n
+				SCALAR_TYPE qq = decode(tmp[i*ELEMENTS_PER_THREAD+j], RadixOffset);\n
+				val[qq] += 1;\n
+			}\n
+		}\n
+		
+		int totalSum;\n
+		int threadOffset[1<<RADIX_SIZE];\n
+		blockScan(val[0], localId, laneId, warpId, threadOffset[0], totalSum);\n
+		val[0] = 0;\n
+		
+		// maybe not needed\n
+		barrier();\n
+		
+		for (int j = 1; j < (1<<RADIX_SIZE); ++j)\n
+		{\n
+			int ss;\n
+			blockScan(val[j], localId, laneId, warpId, threadOffset[j], ss);\n
+			val[j] = totalSum;\n
+			totalSum += ss;
+			barrier();
+		}\n
+		
+		for (uint i = 0; i < N_PASSES; ++i)\n
+		{\n
+			for (uint j = 0; j < ELEMENTS_PER_THREAD; ++j)\n
+			{\n
+				SCALAR_TYPE qq = decode(tmp[i*ELEMENTS_PER_THREAD+j], RadixOffset);\n
+				int shIdx = threadOffset[qq];\n
+				++threadOffset[qq];\n
+				sharedReadInput[shIdx+val[qq]] = tmp[i*ELEMENTS_PER_THREAD+j];\n
+				sharedOutIndices[shIdx+val[qq]] = shIdx+sharedOffsets[qq];\n
+			}\n
+		}\n
+		
+		memoryBarrierShared();
+		barrier();
+		
+		for (uint i = 0; i < N_PASSES; ++i)\n
+		{\n
+			for (uint j = 0; j < ELEMENTS_PER_THREAD; ++j)\n
+			{\n
+				uint idx = (i*gl_WorkGroupSize.x + localId)*ELEMENTS_PER_THREAD + j;\n
+				outputArray[sharedOutIndices[idx]] = sharedReadInput[idx];\n
+			}\n
 		}\n
 }\n
 );

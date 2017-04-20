@@ -222,6 +222,7 @@ typedef struct
     unsigned local_block_size;
     unsigned warp_size;
     unsigned radix_size;
+	unsigned radix_sort_num_passes;
 } glsl_algo_configuration;
 
 typedef struct

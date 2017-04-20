@@ -23,7 +23,7 @@ layout(binding = 1) buffer OutputBlockArray\n
 
 const uint DSIZE = 1<<RADIX_SIZE;
 
-const uint C_DSIZE = 1;
+const uint C_DSIZE = DSIZE>>1;
 const uint BIT_OFFSET = 16;
 
 shared uint blockWarpScan[C_DSIZE][WARP_SIZE];\n
@@ -111,8 +111,8 @@ void main()\n
 		{\n
 			for (uint i = 0; i < C_DSIZE; ++i)\n
 			{\n
-				outputArray[gl_WorkGroupID.x+i*gl_NumWorkGroups.x*2] = val[i]&((1<<BIT_OFFSET)-1);\n
-				outputArray[gl_WorkGroupID.x+(i*gl_NumWorkGroups.x*2+1)] = val[i]>>BIT_OFFSET;\n
+				outputArray[gl_WorkGroupID.x+2*i*gl_NumWorkGroups.x] = val[i]&((1<<BIT_OFFSET)-1);\n
+				outputArray[gl_WorkGroupID.x+(2*i+1)*gl_NumWorkGroups.x] = val[i]>>BIT_OFFSET;\n
 			}\n
 		}\n
    }\n

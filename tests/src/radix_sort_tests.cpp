@@ -287,7 +287,7 @@ TEST_F(RadixSortTest, TestScatterSingleBlockInt4)
     
     std::vector<int> expectedResult(result.size());
     radix_sort_single_pass(vec.data(), expectedResult.data(), n, 0u, 1u);
-    
+
     EXPECT_EQ(expectedResult, result);
 }
 

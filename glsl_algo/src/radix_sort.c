@@ -43,7 +43,7 @@ void glsl_radix_sort_scatter(const glsl_algo_gl_context *gl,
     unsigned superScalarNumElements = glsl_algo_get_rw_num_elements(ctx->conf.rw_type);
     unsigned elements_per_block = rw_per_thread * ctx->conf.local_block_size * superScalarNumElements;
     unsigned num_blocks = (num_elements + elements_per_block - 1u) / elements_per_block;
-    unsigned adjustedArraySize = (num_elements + superScalarNumElements - 1u) / superScalarNumElements;
+    unsigned adjustedArraySize = num_elements;
     
     gl->glUseProgram(ctx->radix_sort_scatter_program);
     gl->glUniform1ui(0, rw_per_thread);

@@ -150,23 +150,22 @@ const uint DSIZE = 1<<RADIX_SIZE;
 const uint C_DSIZE = DSIZE>>1;
 const uint BIT_OFFSET = 16;
 
-shared SCALAR_TYPE sharedMem[BLOCK_SIZE];\n
 shared SCALAR_TYPE blockWarpScan[WARP_SIZE];\n
-shared uint sharedOffsets[1<<RADIX_SIZE];\n
+shared uint sharedOffsets[DSIZE];\n
 shared SCALAR_TYPE sharedReadInput[BLOCK_SIZE*N_PASSES*ELEMENTS_PER_THREAD];\n
 shared uint sharedOutIndices[BLOCK_SIZE*N_PASSES*ELEMENTS_PER_THREAD];\n
 
 SCALAR_TYPE warpScanInclusive(in SCALAR_TYPE value, in uint localId, in uint laneIndex, in uint warpSize)\n
 {\n
-	sharedMem[localId] = value;\n
+	sharedReadInput[localId] = value;\n
 	uint off = 1;\n
 	while (off < warpSize)\n
 	{\n
 		uint prev = localId-off;\n
 		if (off <= laneIndex)\n
 		{\n
-			value += sharedMem[prev];\n
-			sharedMem[localId] = value;\n
+			value += sharedReadInput[prev];\n
+			sharedReadInput[localId] = value;\n
 		}\n
 		off<<=1;\n
 	}\n
@@ -175,7 +174,7 @@ SCALAR_TYPE warpScanInclusive(in SCALAR_TYPE value, in uint localId, in uint lan
 
 SCALAR_TYPE decode(in SCALAR_TYPE item, in uint radixOffset)\n
 {\n
-    return (item >> radixOffset) & SCALAR_TYPE((1<<RADIX_SIZE)-1);\n
+    return (item >> radixOffset) & SCALAR_TYPE(DSIZE-1);\n
 }\n
 
 void blockScan(in uint val, in uint localId, in uint laneId, in uint warpId, out uint threadOffset, out uint sum)\n
@@ -186,7 +185,7 @@ void blockScan(in uint val, in uint localId, in uint laneId, in uint warpId, out
 			blockWarpScan[warpId] = valueInWarp;\n
 		}\n
 		
-		SCALAR_TYPE prevSharedMem = laneId == 0 ? SCALAR_TYPE(0) : sharedMem[localId-1];\n
+		SCALAR_TYPE prevSharedMem = laneId == 0 ? SCALAR_TYPE(0) : sharedReadInput[localId-1];\n
 		
 		memoryBarrierShared();\n
 		barrier();\n

@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+GLuint EVENT;
+
 static GLuint create_compute_program(const glsl_algo_gl_context *gl_context, const char *source, int len)
 {
     GLuint program = gl_context->glCreateProgram();
@@ -85,6 +87,8 @@ glsl_algo_context glsl_algo_init(const glsl_algo_gl_context *gl_context, glsl_al
     ctx.radix_sort_scatter_program = create_compute_program(gl_context, buffer, shaderSourceLen);
 
     free(buffer);
+
+	gl_context->glGenQueries(1, &EVENT);
     
     return ctx;
 }

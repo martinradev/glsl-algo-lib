@@ -1,6 +1,21 @@
 #include "glsl_algo/radix_sort.h"
 #include "glsl_algo/prefix_scan.h"
 
+#define LIB_BENCHMARK_GPU(gl, call, queryObject, name) {\
+gl->glBeginQuery(GL_TIME_ELAPSED, queryObject);\
+call;\
+gl->glEndQuery(GL_TIME_ELAPSED);\
+int stopTimerAvailable = 0;\
+while (!stopTimerAvailable) {\
+     gl->glGetQueryObjectiv(queryObject,\
+     GL_QUERY_RESULT_AVAILABLE,\
+     &stopTimerAvailable);\
+}\
+GLuint64 elapsedTime;\
+gl->glGetQueryObjectui64v(queryObject, GL_QUERY_RESULT, &elapsedTime);\
+printf("%s %lf\n", name, ((double)elapsedTime) / 1000000.0);\
+}
+
 void glsl_radix_sort_gather(const glsl_algo_gl_context *gl,
                        const glsl_algo_context *ctx,
                        GLuint input_buffer,
@@ -72,7 +87,10 @@ void glsl_radix_sort_pass(const glsl_algo_gl_context *gl_context,
                           unsigned int rw_per_thread,
                           unsigned int radix_offset)
 {
-    glsl_radix_sort_gather(gl_context, ctx, input_buffer, temporary_radix_buffer, num_elements, rw_per_thread, radix_offset);
+	LIB_BENCHMARK_GPU(gl_context, 
+					  glsl_radix_sort_gather(gl_context, ctx, input_buffer, temporary_radix_buffer, num_elements, rw_per_thread, radix_offset),
+					  EVENT,
+					  "gather")
     
     gl_context->glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     
@@ -80,11 +98,17 @@ void glsl_radix_sort_pass(const glsl_algo_gl_context *gl_context,
     unsigned elements_per_block = rw_per_thread * ctx->conf.local_block_size * glsl_algo_get_rw_num_elements(ctx->conf.rw_type);
     unsigned num_blocks = radix_word * ((num_elements + elements_per_block - 1u) / elements_per_block);
 
-    glsl_local_scan(gl_context, ctx, temporary_radix_buffer, temporary_radix_buffer, num_blocks, num_blocks, 1);
+	LIB_BENCHMARK_GPU(gl_context,
+		glsl_local_scan(gl_context, ctx, temporary_radix_buffer, temporary_radix_buffer, num_blocks, num_blocks, 1),
+		EVENT,
+		"local_scan")
     
     gl_context->glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     
-    glsl_radix_sort_scatter(gl_context, ctx, input_buffer, temporary_radix_buffer, output_buffer, num_elements, rw_per_thread, radix_offset);
+	LIB_BENCHMARK_GPU(gl_context,
+		glsl_radix_sort_scatter(gl_context, ctx, input_buffer, temporary_radix_buffer, output_buffer, num_elements, rw_per_thread, radix_offset),
+		EVENT,
+		"scatter")
 }
 
 void glsl_radix_sort(const glsl_algo_gl_context *gl_context,

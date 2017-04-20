@@ -24,6 +24,18 @@ layout(binding = 1) buffer OutputBlockArray\n
 shared SCALAR_TYPE blockWarpScan[WARP_SIZE];\n
 shared SCALAR_TYPE sharedMem[BLOCK_SIZE];\n
 
+#if HAS_SHUFFLE_INSTRUCTIONS==1\n
+SCALAR_TYPE warpReduce(in SCALAR_TYPE value, in uint localId, in uint laneIndex)\n
+{\n
+	uint off = 1;\n
+	while (off < WARP_SIZE)\n
+	{\n
+		value += shuffleUpNV(value, off, WARP_SIZE);\n
+		off<<=1;\n
+	}\n
+	return value;\n
+}\n
+#else\n
 SCALAR_TYPE warpReduce(in SCALAR_TYPE value, in uint localId, in uint laneIndex)\n
 {\n
 	sharedMem[localId] = value;\n
@@ -37,6 +49,7 @@ SCALAR_TYPE warpReduce(in SCALAR_TYPE value, in uint localId, in uint laneIndex)
 	}\n
 	return value;\n
 }\n
+#endif\n
 
 TYPE decode(in TYPE item, in uint radixOffset)\n
 {\n
@@ -152,23 +165,6 @@ SCALAR_TYPE warpScanInclusive(in SCALAR_TYPE value, in uint localId, in uint lan
 	return value;\n
 }\n
 
-SCALAR_TYPE warpScanExclusive(in SCALAR_TYPE value, in uint localId, in uint laneIndex, in uint warpSize)\n
-{\n
-	sharedMem[localId] = value;\n
-	uint off = 1;\n
-	while (off < warpSize)\n
-	{\n
-		uint prev = localId-off;\n
-		if (off <= laneIndex)\n
-		{\n
-			value += sharedMem[prev];\n
-			sharedMem[localId] = value;\n
-		}\n
-		off<<=1;\n
-	}\n
-	return laneIndex == 0 ? 0 : sharedMem[localId-1];\n
-}\n
-
 SCALAR_TYPE decode(in SCALAR_TYPE item, in uint radixOffset)\n
 {\n
     return (item >> radixOffset) & SCALAR_TYPE((1<<RADIX_SIZE)-1);\n
@@ -216,10 +212,13 @@ void main()\n
 		memoryBarrierShared();\n
 		barrier();\n
 		
+		uint tmpIdx = localId;\n
+		
 		for (uint i = 0; i < N_PASSES*ELEMENTS_PER_THREAD && threadId < ArraySize; ++i)\n
 		{\n
-			sharedReadInput[localId+i*gl_WorkGroupSize.x] = inputArray[threadId];\n
+			sharedReadInput[tmpIdx] = inputArray[threadId];\n
 			threadId += gl_WorkGroupSize.x;\n
+			tmpIdx += gl_WorkGroupSize.x;\n
 		}\n
 		
 		memoryBarrierShared();\n

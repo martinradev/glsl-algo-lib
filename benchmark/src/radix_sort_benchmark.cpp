@@ -6,12 +6,14 @@
 
 #include "benchmark/util.hpp"
 
+#include <iostream>
+
 static void BM_RadixSortMultipleRanges(benchmark::State &state)
 {
     glsl_algo_gl_context glContext;
     init_window_and_gl_context(&glContext);
 
-    const unsigned n = 8 * 1024 * 1024;
+    const unsigned n = 16 * 1024 * 1024;
     std::vector<int> vec = generateIntegralRandomVector(n, 0, 1<<30);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     GLuint pingPongBuffer = create_ssbo(n);
@@ -47,8 +49,9 @@ static void GenerateFullBenchmark(benchmark::internal::Benchmark* b) {
             GLSL_ALGO_READ_WRITE_TYPE type = rwTypes[t];
             for (unsigned int blockSize = 128u; blockSize <= 1024u; blockSize += 128u)
             {
-                for (unsigned int readsPerThread = 1u; readsPerThread <= 8u; readsPerThread*=2)
+                for (unsigned int readsPerThread = 1u; readsPerThread <= 32u; readsPerThread*=2)
                 {
+					if (glsl_algo_get_rw_num_elements(type) * blockSize * readsPerThread * 8 > 32 * 1024) continue;
                     b->Args({static_cast<int>(type), static_cast<int>(blockSize), static_cast<int>(readsPerThread), static_cast<int>(r)});
                 }
             }
@@ -64,7 +67,7 @@ static void BM_RadixSortBenchmarkScalability(benchmark::State &state)
 	glsl_algo_gl_context glContext;
 	init_window_and_gl_context(&glContext);
 
-	glsl_algo_configuration conf = { GARWTint2, 256, 32, 1, 1};
+	glsl_algo_configuration conf = { GARWTint4, 256, 32, 2, 2};
 	glsl_algo_context ctx = glsl_algo_init(&glContext, conf);
 
 	const unsigned n = state.range(0);
@@ -72,8 +75,8 @@ static void BM_RadixSortBenchmarkScalability(benchmark::State &state)
 	GLuint inputBuffer = create_ssbo(n, vec.data());
 	GLuint pingPongBuffer = create_ssbo(n);
 
-	const unsigned elementsPerBlock = 2 * 256 * 32;
-	const unsigned radixBufferSize = 2 * (n + elementsPerBlock - 1) / elementsPerBlock;
+	const unsigned elementsPerBlock = 4 * 256 * 2;
+	const unsigned radixBufferSize = 4 * (n + elementsPerBlock - 1) / elementsPerBlock;
 	GLuint radixBuffer = create_ssbo(radixBufferSize);
 	GLuint outputBuffer = create_ssbo(n);
 
@@ -82,8 +85,12 @@ static void BM_RadixSortBenchmarkScalability(benchmark::State &state)
 
 	while (state.KeepRunning())
 	{
-		BENCHMARK_GPU(glsl_radix_sort(&glContext, &ctx, inputBuffer, radixBuffer, pingPongBuffer, outputBuffer, n, 32), queryObject);
+		BENCHMARK_GPU(glsl_radix_sort(&glContext, &ctx, inputBuffer, radixBuffer, pingPongBuffer, outputBuffer, n, 2), queryObject);
 	}
+
+	/*std::string prog = get_program_binary(ctx.radix_sort_scatter_program);
+	std::cout << prog << std::endl;
+	exit(1);*/
 
 	state.SetItemsProcessed(state.iterations() * n);
 	destroy_window_and_gl_context();
@@ -92,7 +99,7 @@ static void BM_RadixSortBenchmarkScalability(benchmark::State &state)
 static void GenerateScalabilityBenchmark(benchmark::internal::Benchmark* b) {
 	const unsigned maxn = 128 * 1024 * 1024;
 	const unsigned step = 4 *32 * 1024;
-	for (int r = 4 *32*1024; r <= maxn; r += step)
+	for (int r = maxn; r <= maxn; r += step)
 	{
 		b->Args({r});
 	}

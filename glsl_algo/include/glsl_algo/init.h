@@ -18,6 +18,8 @@
 fprintf(stderr, "Error: %s\n", error_msg); \
 exit(1);
 
+extern GLuint EVENT;
+
 #define GLSL_ALGO_SHADER_ERROR(error_msg, shader) \
 fprintf(stderr, "Error: %s\nShader:\n%s\n", error_msg, shader); \
 exit(1);
@@ -213,6 +215,13 @@ typedef struct
     
     PFNGLDISPATCHCOMPUTEPROC glDispatchCompute;
     PFNGLMEMORYBARRIERPROC glMemoryBarrier;
+
+	PFNGLGENQUERIESPROC glGenQueries;
+	PFNGLBEGINQUERYPROC glBeginQuery;
+	PFNGLENDQUERYPROC glEndQuery;
+	PFNGLGETQUERYOBJECTIVPROC glGetQueryObjectiv;
+	PFNGLGETQUERYOBJECTUI64VPROC glGetQueryObjectui64v;
+
 } glsl_algo_gl_context;
 
 typedef struct

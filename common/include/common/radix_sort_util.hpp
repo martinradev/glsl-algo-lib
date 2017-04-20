@@ -6,13 +6,13 @@
 #include <cassert>
 #include <vector>
 
-inline int decode(int el, unsigned radixOffset, unsigned radixSize)
+inline unsigned decode(unsigned el, unsigned radixOffset, unsigned radixSize)
 {
-    int t = (el >> radixOffset) & ((1<<radixSize)-1);
+	unsigned t = (el >> radixOffset) & ((1<<radixSize)-1);
     return t;
 }
 
-inline void radix_sort_gather(const int *input, int *output, unsigned n, unsigned block_size, unsigned radixOffset, unsigned radixSize)
+inline void radix_sort_gather(const unsigned *input, unsigned *output, unsigned n, unsigned block_size, unsigned radixOffset, unsigned radixSize)
 {
     const unsigned numBlocks = (n + block_size - 1) / block_size;
     for (unsigned i = 0u, b = 0u; i < n; i+=block_size, ++b)
@@ -29,7 +29,7 @@ inline void radix_sort_gather(const int *input, int *output, unsigned n, unsigne
     }
 }
 
-inline void radix_sort_single_pass(const int *input, int *output, unsigned n, unsigned radixOffset, unsigned radixSize)
+inline void radix_sort_single_pass(const unsigned *input, unsigned *output, unsigned n, unsigned radixOffset, unsigned radixSize)
 {
     std::vector<unsigned> cnt(1<<radixSize, 0u);
     for (unsigned j = 0u; j < n; ++j)

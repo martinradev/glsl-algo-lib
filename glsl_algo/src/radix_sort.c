@@ -1,6 +1,8 @@
 #include "glsl_algo/radix_sort.h"
 #include "glsl_algo/prefix_scan.h"
 
+#include <assert.h>
+
 #define LIB_BENCHMARK_GPU(gl, call, queryObject, name) {\
 gl->glBeginQuery(GL_TIME_ELAPSED, queryObject);\
 call;\
@@ -24,6 +26,7 @@ void glsl_radix_sort_gather(const glsl_algo_gl_context *gl,
                        unsigned int rw_per_thread,
                        unsigned int radix_offset)
 {
+	assert(ctx->conf.local_block_size <= 512);
     unsigned superScalarNumElements = glsl_algo_get_rw_num_elements(ctx->conf.rw_type);
     unsigned block_size = ctx->conf.local_block_size * superScalarNumElements * rw_per_thread;
     
@@ -55,6 +58,7 @@ void glsl_radix_sort_scatter(const glsl_algo_gl_context *gl,
                              unsigned int rw_per_thread,
                              unsigned int radix_offset)
 {
+	assert(ctx->conf.local_block_size <= 512);
     unsigned superScalarNumElements = glsl_algo_get_rw_num_elements(ctx->conf.rw_type);
     unsigned elements_per_block = rw_per_thread * ctx->conf.local_block_size * superScalarNumElements;
     unsigned num_blocks = (num_elements + elements_per_block - 1u) / elements_per_block;
@@ -87,6 +91,7 @@ void glsl_radix_sort_pass(const glsl_algo_gl_context *gl_context,
                           unsigned int rw_per_thread,
                           unsigned int radix_offset)
 {
+	assert(ctx->conf.local_block_size <= 512);
 	LIB_BENCHMARK_GPU(gl_context, 
 					  glsl_radix_sort_gather(gl_context, ctx, input_buffer, temporary_radix_buffer, num_elements, rw_per_thread, radix_offset),
 					  EVENT,
@@ -120,6 +125,7 @@ void glsl_radix_sort(const glsl_algo_gl_context *gl_context,
                           unsigned int num_elements,
                           unsigned int rw_per_thread)
 {
+	assert(ctx->conf.local_block_size <= 512);
     for (unsigned i = 0u; i < 32u; i += ctx->conf.radix_size)
     {
         glsl_radix_sort_pass(gl_context, ctx, input_buffer, temporary_radix_buffer, ping_pong_buffer, num_elements, rw_per_thread, i);

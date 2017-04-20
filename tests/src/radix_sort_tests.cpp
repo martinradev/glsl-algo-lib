@@ -206,7 +206,7 @@ TEST_F(RadixSortTest, TestScatterSingleBlock)
     
     std::vector<unsigned> result(n);
     get_ssbo_data(outputBuffer, result.size(), result.data());
-    
+
     std::vector<unsigned> expectedResult(result.size());
     radix_sort_single_pass(vec.data(), expectedResult.data(), n, 0u, 1u);
 

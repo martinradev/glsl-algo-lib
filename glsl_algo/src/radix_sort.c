@@ -3,6 +3,7 @@
 
 #include <assert.h>
 
+#if 0
 #define LIB_BENCHMARK_GPU(gl, call, queryObject, name) {\
 gl->glBeginQuery(GL_TIME_ELAPSED, queryObject);\
 call;\
@@ -17,6 +18,9 @@ GLuint64 elapsedTime;\
 gl->glGetQueryObjectui64v(queryObject, GL_QUERY_RESULT, &elapsedTime);\
 printf("%s %lf\n", name, ((double)elapsedTime) / 1000000.0);\
 }
+#else
+#define LIB_BENCHMARK_GPU(gl, call, queryObject, name) call;
+#endif
 
 void glsl_radix_sort_gather(const glsl_algo_gl_context *gl,
                        const glsl_algo_context *ctx,

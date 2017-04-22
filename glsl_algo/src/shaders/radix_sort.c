@@ -150,57 +150,33 @@ const uint DSIZE = 1<<RADIX_SIZE;
 const uint C_DSIZE = DSIZE>>1;
 const uint BIT_OFFSET = 16;
 
-shared SCALAR_TYPE blockWarpScan[WARP_SIZE];\n
+shared SCALAR_TYPE blockWarpScan[C_DSIZE][WARP_SIZE];\n
 shared uint sharedOffsets[DSIZE];\n
-shared SCALAR_TYPE sharedReadInput[BLOCK_SIZE*N_PASSES*ELEMENTS_PER_THREAD];\n
+shared SCALAR_TYPE sharedReadInput[max(BLOCK_SIZE*C_DSIZE, BLOCK_SIZE*N_PASSES*ELEMENTS_PER_THREAD)];\n
 shared uint sharedOutIndices[BLOCK_SIZE*N_PASSES*ELEMENTS_PER_THREAD];\n
 
-SCALAR_TYPE warpScanInclusive(in SCALAR_TYPE value, in uint localId, in uint laneIndex, in uint warpSize)\n
+void warpScanInclusive(inout SCALAR_TYPE value[C_DSIZE], in uint localId, in uint laneIndex, in uint warpSize)\n
 {\n
-	sharedReadInput[localId] = value;\n
+	for (uint i = 0; i < C_DSIZE; ++i) sharedReadInput[i*BLOCK_SIZE+localId] = value[i];\n
 	uint off = 1;\n
 	while (off < warpSize)\n
 	{\n
 		uint prev = localId-off;\n
 		if (off <= laneIndex)\n
 		{\n
-			value += sharedReadInput[prev];\n
-			sharedReadInput[localId] = value;\n
+			for (uint i = 0; i < C_DSIZE; ++i)\n
+			{\n
+				value[i] += sharedReadInput[i*BLOCK_SIZE+prev];\n
+				sharedReadInput[i*BLOCK_SIZE+localId] = value[i];\n
+			}\n
 		}\n
 		off<<=1;\n
 	}\n
-	return value;\n
 }\n
 
 SCALAR_TYPE decode(in SCALAR_TYPE item, in uint radixOffset)\n
 {\n
     return (item >> radixOffset) & SCALAR_TYPE(DSIZE-1);\n
-}\n
-
-void blockScan(in uint val, in uint localId, in uint laneId, in uint warpId, out uint threadOffset, out uint sum)\n
-{\n
-		SCALAR_TYPE valueInWarp = warpScanInclusive(val, localId, laneId, WARP_SIZE);\n
-		if (laneId == WARP_SIZE-1)\n
-		{\n
-			blockWarpScan[warpId] = valueInWarp;\n
-		}\n
-		
-		SCALAR_TYPE prevSharedMem = laneId == 0 ? SCALAR_TYPE(0) : sharedReadInput[localId-1];\n
-		
-		memoryBarrierShared();\n
-		barrier();\n
-		
-		if (warpId == 0)\n
-		{\n
-			uint tmp = blockWarpScan[laneId];\n
-			blockWarpScan[laneId] = warpScanInclusive(tmp, laneId, laneId, gl_WorkGroupSize.x / WARP_SIZE);\n
-		}\n
-		
-		memoryBarrierShared();\n
-		barrier();\n
-
-		threadOffset = prevSharedMem+(warpId == 0 ? 0 : blockWarpScan[warpId-1]);\n
-		sum = blockWarpScan[gl_WorkGroupSize.x/WARP_SIZE-1];\n
 }\n
 
 void main()\n
@@ -246,24 +222,58 @@ void main()\n
 			val[idx>>1] += 1<<((idx&1)*BIT_OFFSET);\n
 		}\n
 		
-		uint totalSum;\n
 		uint threadOffset[C_DSIZE];\n
-		blockScan(val[0], localId, laneId, warpId, threadOffset[0], totalSum);\n
-		val[0] = (totalSum<<BIT_OFFSET);\n
-		totalSum += (totalSum<<BIT_OFFSET);\n
 		
-		// maybe not needed\n
+		// begin scan\n
+		
+		warpScanInclusive(val, localId, laneId, WARP_SIZE);\n
+		if (laneId == WARP_SIZE-1)\n
+		{\n
+			for (uint i = 0; i < C_DSIZE; ++i) blockWarpScan[i][warpId] = val[i];\n
+		}\n
+		
+		if (laneId == 0)\n
+		{\n
+			for (uint i = 0; i < C_DSIZE; ++i) threadOffset[i] = 0;\n
+		}\n
+		else\n
+		{\n
+			for (uint i = 0; i < C_DSIZE; ++i) threadOffset[i] = sharedReadInput[BLOCK_SIZE*i + localId-1];\n	
+		}\n
+		
+		memoryBarrierShared();\n
 		barrier();\n
 		
-		for (uint j = 1; j < C_DSIZE; ++j)\n
+		if (warpId == 0)\n
 		{\n
-			uint ss;\n
-			blockScan(val[j], localId, laneId, warpId, threadOffset[j], ss);\n
-			val[j] = totalSum>>BIT_OFFSET;\n
-			val[j] |= (val[j]+ss)<<BIT_OFFSET;\n
+			for (uint i = 0; i < C_DSIZE; ++i) val[i] = blockWarpScan[i][laneId];\n
+			warpScanInclusive(val, laneId, laneId, gl_WorkGroupSize.x / WARP_SIZE);\n
+			for (uint i = 0; i < C_DSIZE; ++i) blockWarpScan[i][laneId] = val[i];
+		}\n
+		
+		memoryBarrierShared();\n
+		barrier();\n
+		
+		if (warpId != 0)\n
+		{\n
+			for (uint i = 0; i < C_DSIZE; ++i) threadOffset[i] += blockWarpScan[i][warpId-1];\n
+ 		}\n
+		
+		// end scan \n
+		
+		barrier();\n
+		
+		uint totalSum = blockWarpScan[0][gl_WorkGroupSize.x/WARP_SIZE-1];\n
+		val[0] = (totalSum<<BIT_OFFSET);\n;
+		totalSum += (totalSum<<BIT_OFFSET);\n
+		
+		for (uint i = 1; i < C_DSIZE; ++i)\n
+		{\n
+			uint ss = blockWarpScan[i][gl_WorkGroupSize.x/WARP_SIZE-1];\n
+			val[i] = totalSum>>BIT_OFFSET;\n
+			val[i] |= (val[i]+ss)<<BIT_OFFSET;\n
 			totalSum += ss;\n
 			totalSum += (ss<<BIT_OFFSET);\n
-			barrier();
 		}\n
 		
 		for (uint i = 0; i < N_PASSES*ELEMENTS_PER_THREAD; ++i)\n

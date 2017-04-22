@@ -179,6 +179,8 @@ SCALAR_TYPE decode(in SCALAR_TYPE item, in uint radixOffset)\n
     return (item >> radixOffset) & SCALAR_TYPE(DSIZE-1);\n
 }\n
 
+shared int VoteExit;
+
 void main()\n
 {\n
 		uint threadId = gl_WorkGroupID.x * gl_WorkGroupSize.x * N_PASSES * ELEMENTS_PER_THREAD + gl_LocalInvocationID.x;\n
@@ -186,14 +188,39 @@ void main()\n
 		uint laneId = GET_LANE_ID(localId);\n
 		uint warpId = GET_WARP_ID(localId);\n
 		
-		if (localId < DSIZE)\n
+		if (localId == 0)\n
 		{\n
-				int index = int(gl_NumWorkGroups.x*localId + gl_WorkGroupID.x - 1);\n
-				sharedOffsets[localId] = index < 0 ? 0 : blockArray[index];\n
+			VoteExit = -1;\n
 		}\n
 		
 		memoryBarrierShared();\n
 		barrier();\n
+		
+		if (localId < DSIZE)\n
+		{\n
+				int index = int(gl_NumWorkGroups.x*localId + gl_WorkGroupID.x - 1);\n
+				uint tmp = index < 0 ? 0 : blockArray[index];\n
+				if ((blockArray[index+1]-tmp) == (gl_WorkGroupSize.x * N_PASSES * ELEMENTS_PER_THREAD))\n
+				{\n
+					VoteExit = int(localId);\n
+				}\n
+				sharedOffsets[localId] = tmp;\n
+		}\n
+		
+		memoryBarrierShared();\n
+		barrier();\n
+		
+		if (VoteExit != -1)\n
+		{\n
+			localId += sharedOffsets[VoteExit];
+			for (uint i = 0; i < N_PASSES*ELEMENTS_PER_THREAD && threadId < ArraySize; ++i)\n
+			{\n
+				outputArray[localId] = inputArray[threadId];\n
+				localId += gl_WorkGroupSize.x;\n
+				threadId += gl_WorkGroupSize.x;\n
+			}\n
+			return;\n
+		}\n
 		
 		uint tmpIdx = localId;\n
 		

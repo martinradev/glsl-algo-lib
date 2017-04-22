@@ -389,3 +389,27 @@ TEST_F(RadixSortTest, TestComplicatedSort)
     
     EXPECT_EQ(vec, result);
 }
+
+TEST_F(RadixSortTest, TestEarlyExitCase)
+{
+	glsl_algo_configuration conf = { GARWTuint4, 256, 32, 4, 2 };
+	glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
+
+	const unsigned n = 256 * 1024;
+	std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 1u << 2);
+	GLuint inputBuffer = create_ssbo(n, vec.data());
+	GLuint pingPongBuffer = create_ssbo(n);
+	GLuint outputBuffer = create_ssbo(n);
+
+	const unsigned radixBufferSize = 16 * 512;
+	GLuint radixBuffer = create_ssbo(radixBufferSize);
+
+	glsl_radix_sort(&mGLContext, &ctx, inputBuffer, radixBuffer, pingPongBuffer, outputBuffer, n, 2);
+
+	std::vector<unsigned> result(n);
+	get_ssbo_data(outputBuffer, result.size(), result.data());
+
+	std::sort(vec.begin(), vec.end());
+
+	EXPECT_EQ(vec, result);
+}

@@ -42,7 +42,7 @@ static void BM_RadixSortMultipleRanges(benchmark::State &state)
 }
 
 static void GenerateFullBenchmark(benchmark::internal::Benchmark* b) {
-    GLSL_ALGO_READ_WRITE_TYPE rwTypes[] = {GARWTint1, GARWTint2, GARWTint4};
+    GLSL_ALGO_READ_WRITE_TYPE rwTypes[] = {GARWTuint1, GARWTuint2, GARWTuint4};
     
     for (unsigned r = 1u; r <= 4; ++r)
     {
@@ -69,7 +69,7 @@ static void BM_RadixSortBenchmarkScalability(benchmark::State &state)
 	glsl_algo_gl_context glContext;
 	init_window_and_gl_context(&glContext);
 
-	glsl_algo_configuration conf = { GARWTint1, 256, 32, 2, 8};
+	glsl_algo_configuration conf = { GARWTuint1, 256, 32, 2, 8};
 	glsl_algo_context ctx = glsl_algo_init(&glContext, conf);
 
 	const unsigned n = state.range(0);
@@ -101,7 +101,7 @@ static void BM_RadixSortBenchmarkScalability(benchmark::State &state)
 static void GenerateScalabilityBenchmark(benchmark::internal::Benchmark* b) {
 	const unsigned maxn = 128 * 1024 * 1024;
 	const unsigned step = 4 *32 * 1024;
-	for (int r = step; r <= maxn; r += step)
+	for (int r = maxn; r <= maxn; r += step)
 	{
 		b->Args({r});
 	}

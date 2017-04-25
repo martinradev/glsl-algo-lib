@@ -28,20 +28,6 @@ const uint BIT_OFFSET = 16;
 shared uint blockWarpScan[C_DSIZE][WARP_SIZE];\n
 shared uint sharedMem[C_DSIZE][BLOCK_SIZE];\n
 
-#if HAS_SHUFFLE_INSTRUCTIONS==1\n
-void warpReduce(inout uint value[C_DSIZE], in uint localId, in uint laneIndex)\n
-{\n
-	uint off = 1;\n
-	while (off < WARP_SIZE)\n
-	{\n
-		for (uint i = 0; i < C_DSIZE; ++i)\n
-		{\n
-			value[i] += shuffleUpNV(value[i], off, WARP_SIZE);\n
-		}\n
-		off<<=1;\n
-	}\n
-}\n
-#else\n
 void warpReduce(inout uint value[C_DSIZE], in uint localId, in uint laneIndex)\n
 {\n
 	for (uint i = 0; i < C_DSIZE; ++i) sharedMem[i][localId] = value[i];\n
@@ -57,7 +43,6 @@ void warpReduce(inout uint value[C_DSIZE], in uint localId, in uint laneIndex)\n
 		off<<=1;\n
 	}\n
 }\n
-#endif\n
 
 TYPE decode(in TYPE item, in uint radixOffset)\n
 {\n

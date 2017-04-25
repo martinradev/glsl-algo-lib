@@ -2,8 +2,6 @@
 #define SHADER_UTILS_H
 
 #define SHADER(version,src) "#version " #version "\n" \
-"#extension GL_NV_shader_thread_shuffle : require\n" \
-"#define HAS_SHUFFLE_INSTRUCTIONS 0\n" \
 "#define TYPE %s\n" \
 "#define SCALAR_TYPE %s\n" \
 "#define BLOCK_SIZE %u\n" \

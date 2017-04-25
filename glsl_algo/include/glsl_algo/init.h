@@ -52,6 +52,53 @@ typedef enum
     GARWTundefined
 } GLSL_ALGO_READ_WRITE_TYPE;
 
+typedef enum
+{
+  GASOadd,
+  GASOmin,
+  GASOmax,
+  
+  GASOundefined
+} GLSL_AlGO_SCAN_OPERATOR;
+
+static inline unsigned glsl_algo_convert_scan_operator(GLSL_AlGO_SCAN_OPERATOR scan_operator)
+{
+    switch(scan_operator)
+    {
+      case GASOadd:
+        return 0u;
+      case GASOmin:
+        return 1u;
+      case GASOmax:
+        return 2u;
+      default:
+        break;
+    }
+    return GASOundefined;
+}
+
+static inline unsigned glsl_algo_convert_rw_type(GLSL_ALGO_READ_WRITE_TYPE type)
+{
+    switch(type)
+    {
+      case GARWTint1:
+      case GARWTint2:
+      case GARWTint4:
+        return 0u;
+      case GARWTuint1:
+      case GARWTuint2:
+      case GARWTuint4:
+        return 1u;
+      case GARWTfloat1:
+      case GARWTfloat2:
+      case GARWTfloat4:
+        return 2u;
+      default:
+        break;
+    }
+    return GARWTundefined;
+}
+
 static inline unsigned glsl_algo_get_rw_num_elements(GLSL_ALGO_READ_WRITE_TYPE type)
 {
     switch(type)
@@ -216,22 +263,22 @@ typedef struct
     PFNGLDISPATCHCOMPUTEPROC glDispatchCompute;
     PFNGLMEMORYBARRIERPROC glMemoryBarrier;
 
-	PFNGLGENQUERIESPROC glGenQueries;
-	PFNGLBEGINQUERYPROC glBeginQuery;
-	PFNGLENDQUERYPROC glEndQuery;
-	PFNGLGETQUERYOBJECTIVPROC glGetQueryObjectiv;
-	PFNGLGETQUERYOBJECTUI64VPROC glGetQueryObjectui64v;
+    PFNGLGENQUERIESPROC glGenQueries;
+    PFNGLBEGINQUERYPROC glBeginQuery;
+    PFNGLENDQUERYPROC glEndQuery;
+    PFNGLGETQUERYOBJECTIVPROC glGetQueryObjectiv;
+    PFNGLGETQUERYOBJECTUI64VPROC glGetQueryObjectui64v;
 
 } glsl_algo_gl_context;
 
 typedef struct
 {
-    // read/write type whenever applicable
     GLSL_ALGO_READ_WRITE_TYPE rw_type;
+    GLSL_AlGO_SCAN_OPERATOR scan_operator;
     unsigned local_block_size;
     unsigned warp_size;
     unsigned radix_size;
-	unsigned radix_sort_num_passes;
+    unsigned radix_sort_num_passes;
 } glsl_algo_configuration;
 
 typedef struct

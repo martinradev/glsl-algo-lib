@@ -57,32 +57,34 @@ glsl_algo_context glsl_algo_init(const glsl_algo_gl_context *gl_context, glsl_al
     assert(buffer != NULL);
     
     unsigned num_elements = glsl_algo_get_rw_num_elements(conf.rw_type);
+    unsigned scan_operator = glsl_algo_convert_scan_operator(conf.scan_operator);
     const char *const type_name = glsl_algo_get_rw_type_name(conf.rw_type);
     const char *const scalar_type_name = glsl_algo_get_rw_type_name(get_equivalent_scalar_type(conf.rw_type));
-        
-    int shaderSourceLen = snprintf(buffer, buffer_max_size, GLSL_ALGO_LOCAL_REDUCE_SHADER_SRC, type_name, scalar_type_name, conf.local_block_size, num_elements, conf.warp_size, conf.radix_size, conf.radix_sort_num_passes);
+    unsigned type_key = glsl_algo_convert_rw_type(conf.rw_type);
+    
+    int shaderSourceLen = snprintf(buffer, buffer_max_size, GLSL_ALGO_LOCAL_REDUCE_SHADER_SRC, type_name, scalar_type_name, type_key, conf.local_block_size, num_elements, conf.warp_size, conf.radix_size, conf.radix_sort_num_passes, scan_operator);
     assert(shaderSourceLen >= 0 && shaderSourceLen < buffer_max_size);
     ctx.reduce_program = create_compute_program(gl_context, buffer, shaderSourceLen);
     
-    shaderSourceLen = snprintf(buffer, buffer_max_size, GLSL_ALGO_LOCAL_SCAN_SHADER_SRC, type_name, scalar_type_name, conf.local_block_size, num_elements, conf.warp_size, conf.radix_size, conf.radix_sort_num_passes);
+    shaderSourceLen = snprintf(buffer, buffer_max_size, GLSL_ALGO_LOCAL_SCAN_SHADER_SRC, type_name, scalar_type_name, type_key, conf.local_block_size, num_elements, conf.warp_size, conf.radix_size, conf.radix_sort_num_passes, scan_operator);
     assert(shaderSourceLen >= 0 && shaderSourceLen < buffer_max_size);
     ctx.scan_program = create_compute_program(gl_context, buffer, shaderSourceLen);
     
-    shaderSourceLen = snprintf(buffer, buffer_max_size, GLSL_ALGO_SET_MEMORY_TO_ZERO_SRC, type_name, scalar_type_name, conf.local_block_size, num_elements, conf.warp_size, conf.radix_size, conf.radix_sort_num_passes);
+    shaderSourceLen = snprintf(buffer, buffer_max_size, GLSL_ALGO_SET_MEMORY_TO_ZERO_SRC, type_name, scalar_type_name, type_key, conf.local_block_size, num_elements, conf.warp_size, conf.radix_size, conf.radix_sort_num_passes, scan_operator);
     assert(shaderSourceLen >= 0 && shaderSourceLen < buffer_max_size);
     ctx.set_value_program = create_compute_program(gl_context, buffer, shaderSourceLen);
     
-    shaderSourceLen = snprintf(buffer, buffer_max_size, GLSL_ALGO_COPY_MEMORY_SRC, type_name, scalar_type_name, conf.local_block_size, num_elements, conf.warp_size, conf.radix_size, conf.radix_sort_num_passes);
+    shaderSourceLen = snprintf(buffer, buffer_max_size, GLSL_ALGO_COPY_MEMORY_SRC, type_name, scalar_type_name, type_key, conf.local_block_size, num_elements, conf.warp_size, conf.radix_size, conf.radix_sort_num_passes, scan_operator);
     assert(shaderSourceLen >= 0 && shaderSourceLen < buffer_max_size);
     ctx.copy_buffer_program = create_compute_program(gl_context, buffer, shaderSourceLen);
     
     GLSL_ALGO_READ_WRITE_TYPE radixIntType = get_equivalent_vector_type(GARWTuint1, num_elements);
     const char *const radixVectorTypeName = glsl_algo_get_rw_type_name(radixIntType);
-    shaderSourceLen = snprintf(buffer, buffer_max_size, GLSL_ALGO_RADIX_SORT_GATHER_SRC, radixVectorTypeName, "uint", conf.local_block_size, num_elements, conf.warp_size, conf.radix_size, conf.radix_sort_num_passes);
+    shaderSourceLen = snprintf(buffer, buffer_max_size, GLSL_ALGO_RADIX_SORT_GATHER_SRC, radixVectorTypeName, "uint", 1u, conf.local_block_size, num_elements, conf.warp_size, conf.radix_size, conf.radix_sort_num_passes, scan_operator);
     assert(shaderSourceLen >= 0 && shaderSourceLen < buffer_max_size);
     ctx.radix_sort_gather_program = create_compute_program(gl_context, buffer, shaderSourceLen);
 
-    shaderSourceLen = snprintf(buffer, buffer_max_size, GLSL_ALGO_RADIX_SORT_SCATTER_SRC, radixVectorTypeName, "uint", conf.local_block_size, num_elements, conf.warp_size, conf.radix_size, conf.radix_sort_num_passes);
+    shaderSourceLen = snprintf(buffer, buffer_max_size, GLSL_ALGO_RADIX_SORT_SCATTER_SRC, radixVectorTypeName, "uint", 1u, conf.local_block_size, num_elements, conf.warp_size, conf.radix_size, conf.radix_sort_num_passes, scan_operator);
     assert(shaderSourceLen >= 0 && shaderSourceLen < buffer_max_size);
     ctx.radix_sort_scatter_program = create_compute_program(gl_context, buffer, shaderSourceLen);
 

@@ -27,7 +27,7 @@ SCALAR_TYPE warpReduce(in SCALAR_TYPE value, in uint localId, in uint laneIndex)
 	while (off < WARP_SIZE)\n
 	{\n
 		uint prev = localId-off;\n
-		value += sharedMem[prev];
+		value = SCAN_OP(value,sharedMem[prev]);
 		sharedMem[localId] = value;\n
 		off<<=1;\n
 	}\n
@@ -42,17 +42,17 @@ void main()\n
    uint warpId = GET_WARP_ID(localId);\n
 	 if (warpId == 0)\n
    {\n
-		 		blockWarpScan[laneId] = SCALAR_TYPE(0);\n
+		 		blockWarpScan[laneId] = SCALAR_TYPE(INITIAL_SCAN_VALUE);\n
 	 }\n
 	 memoryBarrierShared();\n
    barrier();\n
-   SCALAR_TYPE val = SCALAR_TYPE(0);\n
+   SCALAR_TYPE val = SCALAR_TYPE(INITIAL_SCAN_VALUE);\n
 	 uint i = 0;\n
    while(threadId < ArraySize && i < ElementsPerThread)\n
    {\n
       TYPE item = inputArray[threadId];\n
       threadId += gl_WorkGroupSize.x;\n
-      val += SUM(item);\n
+      val = SCAN_OP(val,SUM(item));\n
 			++i;\n
    }\n
    SCALAR_TYPE warpSum = warpReduce(val, localId, laneId);\n

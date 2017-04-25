@@ -36,7 +36,7 @@ SCALAR_TYPE warpScanInclusive(in SCALAR_TYPE value, in uint localId, in uint lan
 		uint prev = localId-off;\n
 		if (off <= laneIndex)\n
 		{\n
-			value += sharedMem[prev];\n
+			value = SCAN_OP(value,sharedMem[prev]);\n
 			sharedMem[localId] = value;\n
 		}\n
 		off<<=1;\n
@@ -53,12 +53,12 @@ SCALAR_TYPE warpScanExclusive(in SCALAR_TYPE value, in uint localId, in uint lan
 		uint prev = localId-off;\n
 		if (off <= laneIndex)\n
 		{\n
-			value += sharedMem[prev];\n
+			value = SCAN_OP(value,sharedMem[prev]);\n
 			sharedMem[localId] = value;\n
 		}\n
 		off<<=1;\n
 	}\n
-	return laneIndex == 0 ? 0 : sharedMem[localId-1];\n
+	return laneIndex == 0 ? INITIAL_SCAN_VALUE : sharedMem[localId-1];\n
 }\n
 
 void main()\n
@@ -67,7 +67,7 @@ void main()\n
 	uint localId = gl_LocalInvocationID.x;\n
 	uint laneId = GET_LANE_ID(localId);\n
 	uint warpId = GET_WARP_ID(localId);\n
-	SCALAR_TYPE offset = AddBlockOffset ? blockArray[gl_WorkGroupID.x] : SCALAR_TYPE(0);\n
+	SCALAR_TYPE offset = AddBlockOffset ? blockArray[gl_WorkGroupID.x] : SCALAR_TYPE(INITIAL_SCAN_VALUE);\n
 	for (uint i = 0; i < ElementsPerThread && threadId < ArraySize; ++i)\n
 	{\n
 			TYPE item = inputArray[threadId];\n
@@ -79,7 +79,7 @@ void main()\n
 				blockWarpScan[warpId] = valueInWarp;\n
 			}\n
 			
-			SCALAR_TYPE prevSharedMem = laneId == 0 ? SCALAR_TYPE(0) : sharedMem[localId-1];
+			SCALAR_TYPE prevSharedMem = laneId == 0 ? SCALAR_TYPE(INITIAL_SCAN_VALUE) : sharedMem[localId-1];
 			
 			memoryBarrierShared();\n
 		  barrier();\n
@@ -98,8 +98,8 @@ void main()\n
 			{\n
 					TO_INCLUSIVE(itemScan, item);\n
 			}\n
-			outputArray[threadId] = TYPE(prevSharedMem+blockWarpScan[warpId]+offset)+itemScan;\n
-			offset += blockWarpScan[gl_WorkGroupSize.x/WARP_SIZE-1]+sharedMem[gl_WorkGroupSize.x-1];\n
+			outputArray[threadId] = SCAN_OP(TYPE(SCAN_OP(SCAN_OP(prevSharedMem,blockWarpScan[warpId]),offset)),itemScan);\n
+			offset = SCAN_OP(offset,SCAN_OP(blockWarpScan[gl_WorkGroupSize.x/WARP_SIZE-1],sharedMem[gl_WorkGroupSize.x-1]));\n
 			barrier();\n
 			threadId += gl_WorkGroupSize.x;\n
 	}\n

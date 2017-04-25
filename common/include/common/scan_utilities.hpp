@@ -1,37 +1,86 @@
 #ifndef SCAN_UTILITIES_HPP
 #define SCAN_UTILITIES_HPP
 
+#include <glsl_algo/init.h>
+
 #include <random>
 #include <vector>
+#include <cassert>
+#include <cmath>
+#include <limits>
+
+namespace
+{
+  
+template<typename T>
+T apply_scan_operator(T a, T b, GLSL_AlGO_SCAN_OPERATOR scan_op)
+{
+  
+    if (scan_op == GASOadd)
+    {
+        return a+b;
+    }
+    else if (scan_op == GASOmin)
+    {
+        return std::min(a,b);
+    }
+    else if (scan_op == GASOmax)
+    {
+        return std::max(a,b);
+    }
+    assert(false && "undefined operator");
+    return static_cast<T>(0);
+}
 
 template<typename T>
-void scan(const T *input, T *output, unsigned n, unsigned blockSize, bool isInclusive)
+T get_initial_value(GLSL_AlGO_SCAN_OPERATOR scan_op)
+{
+      if (scan_op == GASOadd)
+      {
+          return static_cast<T>(0);
+      }
+      else if (scan_op == GASOmin)
+      {
+          return std::numeric_limits<T>::max();
+      }
+      else if(scan_op == GASOmax)
+      {
+          return std::numeric_limits<T>::lowest();
+      }
+      assert(false && "undefined operator");
+      return static_cast<T>(0);
+}
+
+} // namespace
+
+template<typename T>
+void scan(const T *input, T *output, unsigned n, unsigned blockSize, bool isInclusive, GLSL_AlGO_SCAN_OPERATOR scan_op = GASOadd)
 {
     unsigned i = 0u, k = 0u;
-    T tmp = static_cast<T>(0);
+    T tmp = ::get_initial_value<T>(scan_op);
     while(i < n)
     {
         if (k == blockSize)
         {
-            tmp = static_cast<T>(0);
+            tmp = ::get_initial_value<T>(scan_op);
             k = 0u;
         }
-        if (isInclusive) tmp += input[i];
+        if (isInclusive) tmp = ::apply_scan_operator(tmp, input[i], scan_op);
         output[i] = tmp;
-        if (!isInclusive) tmp += input[i];
+        if (!isInclusive) tmp = ::apply_scan_operator(tmp, input[i], scan_op);
         ++i;
         ++k;
     } 
 }
 
 template<typename T>
-void reduce(const T *input, T *output, unsigned n, unsigned blockSize)
+void reduce(const T *input, T *output, unsigned n, unsigned blockSize, GLSL_AlGO_SCAN_OPERATOR scan_op = GASOadd)
 {
-    T sum = static_cast<T>(0);
+    T sum = ::get_initial_value<T>(scan_op);
     unsigned k = 0u, i = 0u;
     while(i < n)
     {
-        sum += input[i];
+        sum = ::apply_scan_operator(sum, input[i], scan_op);
         ++i;
         ++k;
         if (k == blockSize || i == n)
@@ -39,7 +88,7 @@ void reduce(const T *input, T *output, unsigned n, unsigned blockSize)
             k = 0;
             *output = sum;
             ++output;
-            sum = static_cast<T>(0);
+            sum = ::get_initial_value<T>(scan_op);
         }
     }
 }

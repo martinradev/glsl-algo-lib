@@ -23,7 +23,7 @@ protected:
 
 TEST_F(RadixSortTest, GatherBaseTest)
 {
-    glsl_algo_configuration conf = {GARWTuint1, 256, 32, 1, 1};
+    glsl_algo_configuration conf = {GARWTuint1, GASOadd, 256, 32, 1, 1};
     glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
     const unsigned numBlocks = 32;
@@ -48,7 +48,7 @@ TEST_F(RadixSortTest, GatherBaseTest)
 
 TEST_F(RadixSortTest, GatherBaseTestInt4)
 {
-    glsl_algo_configuration conf = {GARWTuint4, 256, 32, 1, 1};
+    glsl_algo_configuration conf = {GARWTuint4, GASOadd, 256, 32, 1, 1};
     glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
     const unsigned numBlocks = 10;
@@ -73,7 +73,7 @@ TEST_F(RadixSortTest, GatherBaseTestInt4)
 
 TEST_F(RadixSortTest, GatherBaseTestBiggerBlockSize)
 {
-    glsl_algo_configuration conf = {GARWTuint4, 512, 32, 1, 1};
+    glsl_algo_configuration conf = {GARWTuint4, GASOadd, 512, 32, 1, 1};
     glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
     const unsigned numBlocks = 10;
@@ -98,7 +98,7 @@ TEST_F(RadixSortTest, GatherBaseTestBiggerBlockSize)
 
 TEST_F(RadixSortTest, GatherBaseTestMultipleElementsPerThread)
 {
-    glsl_algo_configuration conf = {GARWTuint4, 256, 32, 1, 2};
+    glsl_algo_configuration conf = {GARWTuint4, GASOadd, 256, 32, 1, 2};
     glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
     const unsigned numElementsPerThread = 2;
@@ -125,7 +125,7 @@ TEST_F(RadixSortTest, GatherBaseTestMultipleElementsPerThread)
 
 TEST_F(RadixSortTest, GatherBaseBiggerRadix)
 {
-    glsl_algo_configuration conf = {GARWTuint4, 256, 32, 4, 2};
+    glsl_algo_configuration conf = {GARWTuint4, GASOadd, 256, 32, 4, 2};
     glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
     const unsigned numElementsPerThread = 2;
@@ -152,7 +152,7 @@ TEST_F(RadixSortTest, GatherBaseBiggerRadix)
 
 TEST_F(RadixSortTest, GatherBaseBiggerRadixWithOffset)
 {
-    glsl_algo_configuration conf = {GARWTuint4, 256, 32, 4, 2};
+    glsl_algo_configuration conf = {GARWTuint4, GASOadd, 256, 32, 4, 2};
     glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
     const unsigned numElementsPerThread = 2;
@@ -189,7 +189,7 @@ TEST_F(RadixSortTest, TestUtilSinglePass)
 
 TEST_F(RadixSortTest, TestScatterSingleBlock)
 {
-    glsl_algo_configuration conf = {GARWTuint1, 512, 32, 1, 1};
+    glsl_algo_configuration conf = {GARWTuint1, GASOadd, 512, 32, 1, 1};
     glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
 
@@ -215,7 +215,7 @@ TEST_F(RadixSortTest, TestScatterSingleBlock)
 
 TEST_F(RadixSortTest, TestScatterMultipleBlocks)
 {
-    glsl_algo_configuration conf = {GARWTuint1, 512, 32, 1, 1};
+    glsl_algo_configuration conf = {GARWTuint1, GASOadd, 512, 32, 1, 1};
     glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
 
@@ -241,7 +241,7 @@ TEST_F(RadixSortTest, TestScatterMultipleBlocks)
 
 TEST_F(RadixSortTest, TestScatterMultipleBlocksBigRadix)
 {
-    glsl_algo_configuration conf = {GARWTuint1, 512, 32, 4, 1};
+    glsl_algo_configuration conf = {GARWTuint1, GASOadd, 512, 32, 4, 1};
     glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
 
@@ -267,7 +267,7 @@ TEST_F(RadixSortTest, TestScatterMultipleBlocksBigRadix)
 
 TEST_F(RadixSortTest, TestScatterSingleBlockInt4)
 {
-    glsl_algo_configuration conf = {GARWTuint4, 512, 32, 1, 1};
+    glsl_algo_configuration conf = {GARWTuint4, GASOadd, 512, 32, 1, 1};
     glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
 
@@ -293,7 +293,7 @@ TEST_F(RadixSortTest, TestScatterSingleBlockInt4)
 
 TEST_F(RadixSortTest, TestScatterSingleSmallBlock)
 {
-    glsl_algo_configuration conf = {GARWTuint1, 384, 32, 1, 1};
+    glsl_algo_configuration conf = {GARWTuint1, GASOadd, 384, 32, 1, 1};
     glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
 
@@ -319,7 +319,7 @@ TEST_F(RadixSortTest, TestScatterSingleSmallBlock)
 
 TEST_F(RadixSortTest, TestScatterSingleBlockMultipleElements)
 {
-    glsl_algo_configuration conf = {GARWTuint1, 512, 32, 1, 2};
+    glsl_algo_configuration conf = {GARWTuint1, GASOadd, 512, 32, 1, 2};
     glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
     const unsigned n = 2*512;
@@ -344,7 +344,7 @@ TEST_F(RadixSortTest, TestScatterSingleBlockMultipleElements)
 
 TEST_F(RadixSortTest, TestSimpleSort)
 {
-    glsl_algo_configuration conf = {GARWTuint1, 512, 32, 1, 1};
+    glsl_algo_configuration conf = {GARWTuint1, GASOadd, 512, 32, 1, 1};
     glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
     const unsigned n = 256*512;
@@ -368,7 +368,7 @@ TEST_F(RadixSortTest, TestSimpleSort)
 
 TEST_F(RadixSortTest, TestComplicatedSort)
 {
-    glsl_algo_configuration conf = {GARWTuint4, 256, 32, 4, 2};
+    glsl_algo_configuration conf = {GARWTuint4, GASOadd, 256, 32, 4, 2};
     glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
   
     const unsigned n = 256*1024;
@@ -392,7 +392,7 @@ TEST_F(RadixSortTest, TestComplicatedSort)
 
 TEST_F(RadixSortTest, TestEarlyExitCase)
 {
-	glsl_algo_configuration conf = { GARWTuint4, 256, 32, 4, 2 };
+	glsl_algo_configuration conf = { GARWTuint4, GASOadd, 256, 32, 4, 2 };
 	glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
 
 	const unsigned n = 256 * 1024;

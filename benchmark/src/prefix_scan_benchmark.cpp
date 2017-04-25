@@ -10,7 +10,7 @@ static void BM_FullScan(benchmark::State &state) {
     glsl_algo_gl_context glContext;
     init_window_and_gl_context(&glContext);
     
-    glsl_algo_configuration conf = {GARWTint1, 1024, 32, 1, 1};
+    glsl_algo_configuration conf = {GARWTint1, GASOadd, 1024, 32, 1, 1};
     glsl_algo_context ctx = glsl_algo_init(&glContext, conf);
 
     const unsigned numBlocks = 1024;
@@ -53,7 +53,7 @@ static void BM_FullScanRW(benchmark::State &state)
         
         GLSL_ALGO_READ_WRITE_TYPE dataType = static_cast<GLSL_ALGO_READ_WRITE_TYPE>(state.range(0));
       
-        glsl_algo_configuration conf = {dataType, 1024, 32, 1, 1};
+        glsl_algo_configuration conf = {dataType, GASOadd, 1024, 32, 1, 1};
         glsl_algo_context ctx = glsl_algo_init(&glContext, conf);
       
         BENCHMARK_GPU(glsl_scan(&glContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 1), queryObject);
@@ -82,7 +82,7 @@ static void BM_FullScanBlockSize(benchmark::State &state)
     while (state.KeepRunning())
     {
         unsigned int blockSize = static_cast<unsigned int>(state.range(0));
-        glsl_algo_configuration conf = {GARWTint1, blockSize, 32, 1, 1};
+        glsl_algo_configuration conf = {GARWTint1, GASOadd, blockSize, 32, 1, 1};
         glsl_algo_context ctx = glsl_algo_init(&glContext, conf);
       
         BENCHMARK_GPU(glsl_scan(&glContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, 1, 1), queryObject);
@@ -97,7 +97,7 @@ static void BM_FullScanElementsPerThread(benchmark::State &state) {
     glsl_algo_gl_context glContext;
     init_window_and_gl_context(&glContext);
     
-    glsl_algo_configuration conf = {GARWTint1, 1024, 32, 1, 1};
+    glsl_algo_configuration conf = {GARWTint1, GASOadd, 1024, 32, 1, 1};
     glsl_algo_context ctx = glsl_algo_init(&glContext, conf);
 
     const unsigned numBlocks = 128 * 1024;
@@ -140,7 +140,7 @@ static void BM_FullScanMultipleRanges(benchmark::State &state)
         GLSL_ALGO_READ_WRITE_TYPE type = static_cast<GLSL_ALGO_READ_WRITE_TYPE>(state.range(0));
         unsigned int blockSize = static_cast<unsigned int>(state.range(1));
         unsigned int readsPerThread = static_cast<unsigned int>(state.range(2));
-        glsl_algo_configuration conf = {type, blockSize, 32, 1, 1};
+        glsl_algo_configuration conf = {type, GASOadd, blockSize, 32, 1, 1};
         glsl_algo_context ctx = glsl_algo_init(&glContext, conf);
       
         BENCHMARK_GPU(glsl_scan(&glContext, &ctx, inputBuffer, intermediateBuffer, outputBuffer, n, readsPerThread, 1), queryObject);

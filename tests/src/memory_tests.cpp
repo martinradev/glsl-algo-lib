@@ -21,8 +21,7 @@ protected:
 
 TEST_F(MemoryTest, SetBufferToZero)
 {
-    glsl_algo_configuration conf = {GARWTint1, GASOadd, 256, 32, 1, 1};
-    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
+    glsl_algo_memory_context ctx = get_memory_context(&mGLContext, GARWTint1, 256);
   
     const unsigned n = 1024 * 1024;
     std::vector<int> vec = generateIntegralRandomVector(n, 0, 6);
@@ -40,8 +39,7 @@ TEST_F(MemoryTest, SetBufferToZero)
 
 TEST_F(MemoryTest, SetBufferToZeroSmallArray)
 {
-    glsl_algo_configuration conf = {GARWTuint4, GASOadd, 384, 32, 1, 1};
-    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
+    glsl_algo_memory_context ctx = get_memory_context(&mGLContext, GARWTuint4, 384);
   
     const unsigned n = 256;
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 199989u);
@@ -59,8 +57,7 @@ TEST_F(MemoryTest, SetBufferToZeroSmallArray)
 
 TEST_F(MemoryTest, SetBufferToZeroMultipleElementsPerThread)
 {
-    glsl_algo_configuration conf = {GARWTint2, GASOadd, 1024, 32, 1, 1};
-    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
+    glsl_algo_memory_context ctx = get_memory_context(&mGLContext, GARWTint2, 1024);
   
     const unsigned n = 1024 * 1024;
     std::vector<int> vec = generateIntegralRandomVector(n, 0, 6);
@@ -78,8 +75,7 @@ TEST_F(MemoryTest, SetBufferToZeroMultipleElementsPerThread)
 
 TEST_F(MemoryTest, CopyBuffer)
 {
-    glsl_algo_configuration conf = {GARWTint1, GASOadd, 256, 32, 1, 1};
-    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
+    glsl_algo_memory_context ctx = get_memory_context(&mGLContext, GARWTint1, 256);
   
     const unsigned n = 1024 * 1024;
     std::vector<int> vec = generateIntegralRandomVector(n, 0, 6);
@@ -96,8 +92,7 @@ TEST_F(MemoryTest, CopyBuffer)
 
 TEST_F(MemoryTest, CopyBufferMultipleElementsPerThread)
 {
-    glsl_algo_configuration conf = {GARWTint1, GASOadd, 256, 32, 1, 1};
-    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
+    glsl_algo_memory_context ctx = get_memory_context(&mGLContext, GARWTint1, 256);
   
     const unsigned n = 1024 * 1024;
     std::vector<int> vec = generateIntegralRandomVector(n, 0, 6);
@@ -114,8 +109,7 @@ TEST_F(MemoryTest, CopyBufferMultipleElementsPerThread)
 
 TEST_F(MemoryTest, CopyBufferUint4)
 {
-    glsl_algo_configuration conf = {GARWTuint4, GASOadd, 512, 32, 1, 1};
-    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
+    glsl_algo_memory_context ctx = get_memory_context(&mGLContext, GARWTuint4, 512);
   
     const unsigned n = 1024 * 1024;
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 6u);
@@ -132,8 +126,7 @@ TEST_F(MemoryTest, CopyBufferUint4)
 
 TEST_F(MemoryTest, CopyBufferFloat2)
 {
-    glsl_algo_configuration conf = {GARWTfloat2, GASOadd, 512, 32, 1, 1};
-    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
+    glsl_algo_memory_context ctx = get_memory_context(&mGLContext, GARWTfloat2, 512);
   
     const unsigned n = 1024 * 1024;
     std::vector<float> vec = generateFloatRandomVector(n, 0.0f, 6.0f);

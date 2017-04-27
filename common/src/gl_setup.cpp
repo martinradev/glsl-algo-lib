@@ -45,12 +45,13 @@ int init_window_and_gl_context(glsl_algo_gl_context *gl)
     gl->glBindBufferBase = glad_glBindBufferBase;
     gl->glDispatchCompute = glad_glDispatchCompute;
     gl->glMemoryBarrier = glad_glMemoryBarrier;
-	gl->glGenQueries = glad_glGenQueries;
-	gl->glBeginQuery = glad_glBeginQuery;
-	gl->glEndQuery = glad_glEndQuery;
-	gl->glGetQueryObjectiv = glad_glGetQueryObjectiv;
-	gl->glGetQueryObjectui64v = glad_glGetQueryObjectui64v;
+    gl->glGenQueries = glad_glGenQueries;
+    gl->glBeginQuery = glad_glBeginQuery;
+    gl->glEndQuery = glad_glEndQuery;
+    gl->glGetQueryObjectiv = glad_glGetQueryObjectiv;
+    gl->glGetQueryObjectui64v = glad_glGetQueryObjectui64v;
 
+    glsl_algo_init(gl);
     
     return 0;
 }

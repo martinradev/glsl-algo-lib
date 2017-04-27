@@ -23,18 +23,17 @@ protected:
 
 TEST_F(RadixSortTest, GatherBaseTest)
 {
-    glsl_algo_configuration conf = {GARWTuint1, GASOadd, 256, 32, 1, 1};
-    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
+    glsl_algo_radix_sort_context ctx = get_radix_sort_context(&mGLContext, GARWTuint1, 256, 1, 1);
   
     const unsigned numBlocks = 32;
     const unsigned n = 256*numBlocks;
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 138791u);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     
-    const unsigned radixBufferSize = 2 * n / conf.local_block_size;
+    const unsigned radixBufferSize = 2 * n / ctx.local_block_size;
     GLuint radixBuffer = create_ssbo(radixBufferSize);
     
-    glsl_radix_sort_gather(&mGLContext, &ctx, inputBuffer, radixBuffer, n, 1u, 0u);
+    glsl_radix_sort_gather(&mGLContext, &ctx, inputBuffer, radixBuffer, n, 0u);
     
     std::vector<unsigned> result(radixBufferSize);
     get_ssbo_data(radixBuffer, result.size(), result.data());
@@ -48,18 +47,17 @@ TEST_F(RadixSortTest, GatherBaseTest)
 
 TEST_F(RadixSortTest, GatherBaseTestInt4)
 {
-    glsl_algo_configuration conf = {GARWTuint4, GASOadd, 256, 32, 1, 1};
-    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
+    glsl_algo_radix_sort_context ctx = get_radix_sort_context(&mGLContext, GARWTuint4, 256, 1, 1);
   
     const unsigned numBlocks = 10;
     const unsigned n = 4*256*numBlocks;
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 138791u);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     
-    const unsigned radixBufferSize = 2 * n / (conf.local_block_size*4);
+    const unsigned radixBufferSize = 2 * n / (ctx.local_block_size*4);
     GLuint radixBuffer = create_ssbo(radixBufferSize);
     
-    glsl_radix_sort_gather(&mGLContext, &ctx, inputBuffer, radixBuffer, n, 1u, 0u);
+    glsl_radix_sort_gather(&mGLContext, &ctx, inputBuffer, radixBuffer, n, 0u);
     
     std::vector<unsigned> result(radixBufferSize);
     get_ssbo_data(radixBuffer, result.size(), result.data());
@@ -73,18 +71,17 @@ TEST_F(RadixSortTest, GatherBaseTestInt4)
 
 TEST_F(RadixSortTest, GatherBaseTestBiggerBlockSize)
 {
-    glsl_algo_configuration conf = {GARWTuint4, GASOadd, 512, 32, 1, 1};
-    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
+    glsl_algo_radix_sort_context ctx = get_radix_sort_context(&mGLContext, GARWTuint4, 512, 1, 1);
   
     const unsigned numBlocks = 10;
     const unsigned n = 4*512*numBlocks;
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 138791u);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     
-    const unsigned radixBufferSize = 2 * n / (conf.local_block_size*4);
+    const unsigned radixBufferSize = 2 * n / (ctx.local_block_size*4);
     GLuint radixBuffer = create_ssbo(radixBufferSize);
     
-    glsl_radix_sort_gather(&mGLContext, &ctx, inputBuffer, radixBuffer, n, 1u, 0u);
+    glsl_radix_sort_gather(&mGLContext, &ctx, inputBuffer, radixBuffer, n, 0u);
     
     std::vector<unsigned> result(radixBufferSize);
     get_ssbo_data(radixBuffer, result.size(), result.data());
@@ -98,8 +95,7 @@ TEST_F(RadixSortTest, GatherBaseTestBiggerBlockSize)
 
 TEST_F(RadixSortTest, GatherBaseTestMultipleElementsPerThread)
 {
-    glsl_algo_configuration conf = {GARWTuint4, GASOadd, 256, 32, 1, 2};
-    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
+    glsl_algo_radix_sort_context ctx = get_radix_sort_context(&mGLContext, GARWTuint4, 256, 1, 2);
   
     const unsigned numElementsPerThread = 2;
     const unsigned numBlocks = 10;
@@ -107,11 +103,11 @@ TEST_F(RadixSortTest, GatherBaseTestMultipleElementsPerThread)
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 138791u);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     
-    const unsigned elementsPerBlock = numElementsPerThread*4*conf.local_block_size;
+    const unsigned elementsPerBlock = numElementsPerThread*4*ctx.local_block_size;
     const unsigned radixBufferSize = 2 * ((n + elementsPerBlock - 1) / elementsPerBlock);
     GLuint radixBuffer = create_ssbo(radixBufferSize);
     
-    glsl_radix_sort_gather(&mGLContext, &ctx, inputBuffer, radixBuffer, n, numElementsPerThread, 0u);
+    glsl_radix_sort_gather(&mGLContext, &ctx, inputBuffer, radixBuffer, n, 0u);
     
     std::vector<unsigned> result(radixBufferSize);
     get_ssbo_data(radixBuffer, result.size(), result.data());
@@ -125,8 +121,7 @@ TEST_F(RadixSortTest, GatherBaseTestMultipleElementsPerThread)
 
 TEST_F(RadixSortTest, GatherBaseBiggerRadix)
 {
-    glsl_algo_configuration conf = {GARWTuint4, GASOadd, 256, 32, 4, 2};
-    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
+    glsl_algo_radix_sort_context ctx = get_radix_sort_context(&mGLContext, GARWTuint4, 256, 4, 2);
   
     const unsigned numElementsPerThread = 2;
     const unsigned numBlocks = 10;
@@ -134,11 +129,11 @@ TEST_F(RadixSortTest, GatherBaseBiggerRadix)
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 138791u);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     
-    const unsigned elementsPerBlock = numElementsPerThread*4*conf.local_block_size;
+    const unsigned elementsPerBlock = numElementsPerThread*4*ctx.local_block_size;
     const unsigned radixBufferSize = 16 * ((n + elementsPerBlock - 1) / elementsPerBlock);
     GLuint radixBuffer = create_ssbo(radixBufferSize);
     
-    glsl_radix_sort_gather(&mGLContext, &ctx, inputBuffer, radixBuffer, n, numElementsPerThread, 0u);
+    glsl_radix_sort_gather(&mGLContext, &ctx, inputBuffer, radixBuffer, n, 0u);
     
     std::vector<unsigned> result(radixBufferSize);
     get_ssbo_data(radixBuffer, result.size(), result.data());
@@ -152,8 +147,7 @@ TEST_F(RadixSortTest, GatherBaseBiggerRadix)
 
 TEST_F(RadixSortTest, GatherBaseBiggerRadixWithOffset)
 {
-    glsl_algo_configuration conf = {GARWTuint4, GASOadd, 256, 32, 4, 2};
-    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
+    glsl_algo_radix_sort_context ctx = get_radix_sort_context(&mGLContext, GARWTuint4, 256, 4, 2);
   
     const unsigned numElementsPerThread = 2;
     const unsigned numBlocks = 10;
@@ -161,11 +155,11 @@ TEST_F(RadixSortTest, GatherBaseBiggerRadixWithOffset)
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 138791u);
     GLuint inputBuffer = create_ssbo(n, vec.data());
     
-    const unsigned elementsPerBlock = numElementsPerThread*4*conf.local_block_size;
+    const unsigned elementsPerBlock = numElementsPerThread*4*ctx.local_block_size;
     const unsigned radixBufferSize = 16 * ((n + elementsPerBlock - 1) / elementsPerBlock);
     GLuint radixBuffer = create_ssbo(radixBufferSize);
     
-    glsl_radix_sort_gather(&mGLContext, &ctx, inputBuffer, radixBuffer, n, numElementsPerThread, 16u);
+    glsl_radix_sort_gather(&mGLContext, &ctx, inputBuffer, radixBuffer, n, 16u);
     
     std::vector<unsigned> result(radixBufferSize);
     get_ssbo_data(radixBuffer, result.size(), result.data());
@@ -189,9 +183,7 @@ TEST_F(RadixSortTest, TestUtilSinglePass)
 
 TEST_F(RadixSortTest, TestScatterSingleBlock)
 {
-    glsl_algo_configuration conf = {GARWTuint1, GASOadd, 512, 32, 1, 1};
-    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
-  
+    glsl_algo_radix_sort_context ctx = get_radix_sort_context(&mGLContext, GARWTuint1, 512, 1, 1);
 
     const unsigned n = 512;
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 16u);
@@ -202,7 +194,7 @@ TEST_F(RadixSortTest, TestScatterSingleBlock)
     const unsigned radixBufferSize = 2;
     GLuint radixBuffer = create_ssbo(radixBufferSize);
     
-    glsl_radix_sort_pass(&mGLContext, &ctx, inputBuffer, radixBuffer, outputBuffer, n, 1, 0);
+    glsl_radix_sort_pass(&mGLContext, &ctx, inputBuffer, radixBuffer, outputBuffer, n, 0);
     
     std::vector<unsigned> result(n);
     get_ssbo_data(outputBuffer, result.size(), result.data());
@@ -215,9 +207,7 @@ TEST_F(RadixSortTest, TestScatterSingleBlock)
 
 TEST_F(RadixSortTest, TestScatterMultipleBlocks)
 {
-    glsl_algo_configuration conf = {GARWTuint1, GASOadd, 512, 32, 1, 1};
-    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
-  
+    glsl_algo_radix_sort_context ctx = get_radix_sort_context(&mGLContext, GARWTuint1, 512, 1, 1);
 
     const unsigned n = 512*16;
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 16u);
@@ -228,7 +218,7 @@ TEST_F(RadixSortTest, TestScatterMultipleBlocks)
     const unsigned radixBufferSize = 2*16;
     GLuint radixBuffer = create_ssbo(radixBufferSize);
     
-    glsl_radix_sort_pass(&mGLContext, &ctx, inputBuffer, radixBuffer, outputBuffer, n, 1, 0);
+    glsl_radix_sort_pass(&mGLContext, &ctx, inputBuffer, radixBuffer, outputBuffer, n, 0);
     
     std::vector<unsigned> result(n);
     get_ssbo_data(outputBuffer, result.size(), result.data());
@@ -241,9 +231,7 @@ TEST_F(RadixSortTest, TestScatterMultipleBlocks)
 
 TEST_F(RadixSortTest, TestScatterMultipleBlocksBigRadix)
 {
-    glsl_algo_configuration conf = {GARWTuint1, GASOadd, 512, 32, 4, 1};
-    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
-  
+    glsl_algo_radix_sort_context ctx = get_radix_sort_context(&mGLContext, GARWTuint1, 512, 4, 1);
 
     const unsigned n = 512*16;
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 16u);
@@ -254,7 +242,7 @@ TEST_F(RadixSortTest, TestScatterMultipleBlocksBigRadix)
     const unsigned radixBufferSize = 16*16;
     GLuint radixBuffer = create_ssbo(radixBufferSize);
     
-    glsl_radix_sort_pass(&mGLContext, &ctx, inputBuffer, radixBuffer, outputBuffer, n, 1, 0);
+    glsl_radix_sort_pass(&mGLContext, &ctx, inputBuffer, radixBuffer, outputBuffer, n, 0);
     
     std::vector<unsigned> result(n);
     get_ssbo_data(outputBuffer, result.size(), result.data());
@@ -267,9 +255,7 @@ TEST_F(RadixSortTest, TestScatterMultipleBlocksBigRadix)
 
 TEST_F(RadixSortTest, TestScatterSingleBlockInt4)
 {
-    glsl_algo_configuration conf = {GARWTuint4, GASOadd, 512, 32, 1, 1};
-    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
-  
+    glsl_algo_radix_sort_context ctx = get_radix_sort_context(&mGLContext, GARWTuint4, 512, 1, 1);
 
     const unsigned n = 4*512;
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 16u);
@@ -280,7 +266,7 @@ TEST_F(RadixSortTest, TestScatterSingleBlockInt4)
     const unsigned radixBufferSize = 2;
     GLuint radixBuffer = create_ssbo(radixBufferSize);
     
-    glsl_radix_sort_pass(&mGLContext, &ctx, inputBuffer, radixBuffer, outputBuffer, n, 1, 0);
+    glsl_radix_sort_pass(&mGLContext, &ctx, inputBuffer, radixBuffer, outputBuffer, n, 0);
     
     std::vector<unsigned> result(n);
     get_ssbo_data(outputBuffer, result.size(), result.data());
@@ -293,9 +279,7 @@ TEST_F(RadixSortTest, TestScatterSingleBlockInt4)
 
 TEST_F(RadixSortTest, TestScatterSingleSmallBlock)
 {
-    glsl_algo_configuration conf = {GARWTuint1, GASOadd, 384, 32, 1, 1};
-    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
-  
+    glsl_algo_radix_sort_context ctx = get_radix_sort_context(&mGLContext, GARWTuint1, 384, 1, 1);
 
     const unsigned n = 384;
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 16u);
@@ -306,7 +290,7 @@ TEST_F(RadixSortTest, TestScatterSingleSmallBlock)
     const unsigned radixBufferSize = 2;
     GLuint radixBuffer = create_ssbo(radixBufferSize);
     
-    glsl_radix_sort_pass(&mGLContext, &ctx, inputBuffer, radixBuffer, outputBuffer, n, 1, 0);
+    glsl_radix_sort_pass(&mGLContext, &ctx, inputBuffer, radixBuffer, outputBuffer, n, 0);
     
     std::vector<unsigned> result(n);
     get_ssbo_data(outputBuffer, result.size(), result.data());
@@ -319,9 +303,8 @@ TEST_F(RadixSortTest, TestScatterSingleSmallBlock)
 
 TEST_F(RadixSortTest, TestScatterSingleBlockMultipleElements)
 {
-    glsl_algo_configuration conf = {GARWTuint1, GASOadd, 512, 32, 1, 2};
-    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
-  
+    glsl_algo_radix_sort_context ctx = get_radix_sort_context(&mGLContext, GARWTuint1, 512, 1, 2);
+    
     const unsigned n = 2*512;
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 16u);
     GLuint inputBuffer = create_ssbo(n, vec.data());
@@ -331,7 +314,7 @@ TEST_F(RadixSortTest, TestScatterSingleBlockMultipleElements)
     const unsigned radixBufferSize = 2;
     GLuint radixBuffer = create_ssbo(radixBufferSize);
     
-    glsl_radix_sort_pass(&mGLContext, &ctx, inputBuffer, radixBuffer, outputBuffer, n, 2, 0);
+    glsl_radix_sort_pass(&mGLContext, &ctx, inputBuffer, radixBuffer, outputBuffer, n, 0);
     
     std::vector<unsigned> result(n);
     get_ssbo_data(outputBuffer, result.size(), result.data());
@@ -344,9 +327,8 @@ TEST_F(RadixSortTest, TestScatterSingleBlockMultipleElements)
 
 TEST_F(RadixSortTest, TestSimpleSort)
 {
-    glsl_algo_configuration conf = {GARWTuint1, GASOadd, 512, 32, 1, 1};
-    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
-  
+    glsl_algo_radix_sort_context ctx = get_radix_sort_context(&mGLContext, GARWTuint1, 512, 1, 1);
+    
     const unsigned n = 256*512;
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 1u<<30);
     GLuint inputBuffer = create_ssbo(n, vec.data());
@@ -356,8 +338,8 @@ TEST_F(RadixSortTest, TestSimpleSort)
     const unsigned radixBufferSize = 2*256;
     GLuint radixBuffer = create_ssbo(radixBufferSize);
     
-    glsl_radix_sort(&mGLContext, &ctx, inputBuffer, radixBuffer, pingPongBuffer, outputBuffer, n, 1);
-    
+    glsl_radix_sort(&mGLContext, &ctx, inputBuffer, radixBuffer, pingPongBuffer, outputBuffer, n);
+
     std::vector<unsigned> result(n);
     get_ssbo_data(outputBuffer, result.size(), result.data());
     
@@ -368,8 +350,7 @@ TEST_F(RadixSortTest, TestSimpleSort)
 
 TEST_F(RadixSortTest, TestComplicatedSort)
 {
-    glsl_algo_configuration conf = {GARWTuint4, GASOadd, 256, 32, 4, 2};
-    glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
+    glsl_algo_radix_sort_context ctx = get_radix_sort_context(&mGLContext, GARWTuint4, 256, 4, 2);
   
     const unsigned n = 256*1024;
     std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 1u<<30);
@@ -380,7 +361,7 @@ TEST_F(RadixSortTest, TestComplicatedSort)
     const unsigned radixBufferSize = 16*512;
     GLuint radixBuffer = create_ssbo(radixBufferSize);
     
-    glsl_radix_sort(&mGLContext, &ctx, inputBuffer, radixBuffer, pingPongBuffer, outputBuffer, n, 2);
+    glsl_radix_sort(&mGLContext, &ctx, inputBuffer, radixBuffer, pingPongBuffer, outputBuffer, n);
     
     std::vector<unsigned> result(n);
     get_ssbo_data(outputBuffer, result.size(), result.data());
@@ -392,8 +373,7 @@ TEST_F(RadixSortTest, TestComplicatedSort)
 
 TEST_F(RadixSortTest, TestEarlyExitCase)
 {
-	glsl_algo_configuration conf = { GARWTuint4, GASOadd, 256, 32, 4, 2 };
-	glsl_algo_context ctx = glsl_algo_init(&mGLContext, conf);
+  glsl_algo_radix_sort_context ctx = get_radix_sort_context(&mGLContext, GARWTuint4, 256, 4, 2);
 
 	const unsigned n = 256 * 1024;
 	std::vector<unsigned> vec = generateIntegralRandomVector(n, 0u, 1u << 2);
@@ -404,7 +384,7 @@ TEST_F(RadixSortTest, TestEarlyExitCase)
 	const unsigned radixBufferSize = 16 * 512;
 	GLuint radixBuffer = create_ssbo(radixBufferSize);
 
-	glsl_radix_sort(&mGLContext, &ctx, inputBuffer, radixBuffer, pingPongBuffer, outputBuffer, n, 2);
+	glsl_radix_sort(&mGLContext, &ctx, inputBuffer, radixBuffer, pingPongBuffer, outputBuffer, n);
 
 	std::vector<unsigned> result(n);
 	get_ssbo_data(outputBuffer, result.size(), result.data());

@@ -1,6 +1,8 @@
 #ifndef SHADER_UTILS_H
 #define SHADER_UTILS_H
 
+#include "glsl_algo/algo_gl.h"
+
 #define SHADER(version,src) "#version " #version "\n" \
 "#define TYPE %s\n" \
 "#define SCALAR_TYPE %s\n" \
@@ -59,5 +61,7 @@
 "#define READ_INDEX(item, index) item[index]\n" \
 "#endif\n" \
 #src
+
+GLuint create_compute_program(const glsl_algo_gl_context *gl_context, const char *source, int len);
 
 #endif // SHADER_UTILS_H

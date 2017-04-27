@@ -7,7 +7,6 @@ const char *const GLSL_ALGO_RADIX_SORT_GATHER_SRC =
 SHADER(450,
 layout(local_size_x=BLOCK_SIZE) in;\n
 
-layout(location=0) uniform uint ElementsPerThread;\n
 layout(location=1) uniform uint ArraySize;\n
 layout(location=2) uniform uint RadixOffset;\n
 
@@ -51,7 +50,7 @@ TYPE decode(in TYPE item, in uint radixOffset)\n
 
 void main()\n
 {\n
-   uint threadId = gl_WorkGroupID.x * gl_WorkGroupSize.x * ElementsPerThread + gl_LocalInvocationID.x;\n
+   uint threadId = gl_WorkGroupID.x * gl_WorkGroupSize.x * RADIX_SORT_NUM_PASSES + gl_LocalInvocationID.x;\n
    uint localId = gl_LocalInvocationID.x;\n
    uint laneId = GET_LANE_ID(localId);\n
    uint warpId = GET_WARP_ID(localId);\n

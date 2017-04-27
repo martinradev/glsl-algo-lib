@@ -22,23 +22,27 @@ printf("%s %lf\n", name, ((double)elapsedTime) / 1000000.0);\
 #define LIB_BENCHMARK_GPU(gl, call, queryObject, name) call;
 #endif
 
+static glsl_algo_scan_context get_scan_context_from_radix_sort_context(const glsl_algo_radix_sort_context *radix_sort_ctx)
+{
+    glsl_algo_scan_context ctx = {radix_sort_ctx->rw_type, radix_sort_ctx->local_block_size, GASOadd, radix_sort_ctx->local_scan_program, 0u};
+    return ctx;
+}
+
 void glsl_radix_sort_gather(const glsl_algo_gl_context *gl,
-                       const glsl_algo_context *ctx,
+                       const glsl_algo_radix_sort_context *ctx,
                        GLuint input_buffer,
                        GLuint temporary_radix_buffer,
                        unsigned int num_elements,
-                       unsigned int rw_per_thread,
                        unsigned int radix_offset)
 {
-	assert(ctx->conf.local_block_size <= 512);
-    unsigned superScalarNumElements = glsl_algo_get_rw_num_elements(ctx->conf.rw_type);
-    unsigned block_size = ctx->conf.local_block_size * superScalarNumElements * rw_per_thread;
+	assert(ctx->local_block_size <= 512);
+    unsigned superScalarNumElements = glsl_algo_get_rw_num_elements(ctx->rw_type);
+    unsigned block_size = ctx->local_block_size * superScalarNumElements * ctx->radix_sort_num_passes;
     
     unsigned gridSize = (num_elements + block_size - 1u) / block_size;
     unsigned adjustedArraySize = (num_elements + superScalarNumElements - 1u) / superScalarNumElements;
     
-    gl->glUseProgram(ctx->radix_sort_gather_program);
-    gl->glUniform1ui(0, rw_per_thread);
+    gl->glUseProgram(ctx->decode_reduce_program);
     gl->glUniform1ui(1, adjustedArraySize);
     gl->glUniform1ui(2, radix_offset);
     
@@ -54,22 +58,20 @@ void glsl_radix_sort_gather(const glsl_algo_gl_context *gl,
 }
 
 void glsl_radix_sort_scatter(const glsl_algo_gl_context *gl,
-                             const glsl_algo_context *ctx,
+                             const glsl_algo_radix_sort_context *ctx,
                              GLuint input_buffer,
                              GLuint temporary_radix_buffer,
                              GLuint output_buffer,
                              unsigned int num_elements,
-                             unsigned int rw_per_thread,
                              unsigned int radix_offset)
 {
-	assert(ctx->conf.local_block_size <= 512);
-    unsigned superScalarNumElements = glsl_algo_get_rw_num_elements(ctx->conf.rw_type);
-    unsigned elements_per_block = rw_per_thread * ctx->conf.local_block_size * superScalarNumElements;
+	assert(ctx->local_block_size <= 512);
+    unsigned superScalarNumElements = glsl_algo_get_rw_num_elements(ctx->rw_type);
+    unsigned elements_per_block = ctx->radix_sort_num_passes * ctx->local_block_size * superScalarNumElements;
     unsigned num_blocks = (num_elements + elements_per_block - 1u) / elements_per_block;
     unsigned adjustedArraySize = num_elements;
     
-    gl->glUseProgram(ctx->radix_sort_scatter_program);
-    gl->glUniform1ui(0, rw_per_thread);
+    gl->glUseProgram(ctx->scan_scatter_program);
     gl->glUniform1ui(1, adjustedArraySize);
     gl->glUniform1ui(2, radix_offset);
     
@@ -87,52 +89,52 @@ void glsl_radix_sort_scatter(const glsl_algo_gl_context *gl,
 }
 
 void glsl_radix_sort_pass(const glsl_algo_gl_context *gl_context,
-                          const glsl_algo_context *ctx,
+                          const glsl_algo_radix_sort_context *ctx,
                           GLuint input_buffer,
                           GLuint temporary_radix_buffer,
                           GLuint output_buffer,
                           unsigned int num_elements,
-                          unsigned int rw_per_thread,
                           unsigned int radix_offset)
 {
-	assert(ctx->conf.local_block_size <= 512);
+	assert(ctx->local_block_size <= 512);
 	LIB_BENCHMARK_GPU(gl_context, 
-					  glsl_radix_sort_gather(gl_context, ctx, input_buffer, temporary_radix_buffer, num_elements, rw_per_thread, radix_offset),
+					  glsl_radix_sort_gather(gl_context, ctx, input_buffer, temporary_radix_buffer, num_elements, radix_offset),
 					  EVENT,
 					  "gather")
     
     gl_context->glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     
-    unsigned radix_word = 1 << ctx->conf.radix_size;
-    unsigned elements_per_block = rw_per_thread * ctx->conf.local_block_size * glsl_algo_get_rw_num_elements(ctx->conf.rw_type);
+    unsigned radix_word = 1 << ctx->radix_size;
+    unsigned elements_per_block = ctx->radix_sort_num_passes * ctx->local_block_size * glsl_algo_get_rw_num_elements(ctx->rw_type);
     unsigned num_blocks = radix_word * ((num_elements + elements_per_block - 1u) / elements_per_block);
 
+    glsl_algo_scan_context scan_ctx = get_scan_context_from_radix_sort_context(ctx);
+
 	LIB_BENCHMARK_GPU(gl_context,
-		glsl_local_scan(gl_context, ctx, temporary_radix_buffer, temporary_radix_buffer, num_blocks, num_blocks, 1),
+		glsl_local_scan(gl_context, &scan_ctx, temporary_radix_buffer, temporary_radix_buffer, num_blocks, num_blocks, 1),
 		EVENT,
 		"local_scan")
     
     gl_context->glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     
 	LIB_BENCHMARK_GPU(gl_context,
-		glsl_radix_sort_scatter(gl_context, ctx, input_buffer, temporary_radix_buffer, output_buffer, num_elements, rw_per_thread, radix_offset),
+		glsl_radix_sort_scatter(gl_context, ctx, input_buffer, temporary_radix_buffer, output_buffer, num_elements, radix_offset),
 		EVENT,
 		"scatter")
 }
 
 void glsl_radix_sort(const glsl_algo_gl_context *gl_context,
-                          const glsl_algo_context *ctx,
+                          const glsl_algo_radix_sort_context *ctx,
                           GLuint input_buffer,
                           GLuint temporary_radix_buffer,
                           GLuint ping_pong_buffer,
                           GLuint output_buffer,
-                          unsigned int num_elements,
-                          unsigned int rw_per_thread)
+                          unsigned int num_elements)
 {
-	assert(ctx->conf.local_block_size <= 512);
-    for (unsigned i = 0u; i < 32u; i += ctx->conf.radix_size)
+	  assert(ctx->local_block_size <= 512);
+    for (unsigned i = 0u; i < 32u; i += ctx->radix_size)
     {
-        glsl_radix_sort_pass(gl_context, ctx, input_buffer, temporary_radix_buffer, ping_pong_buffer, num_elements, rw_per_thread, i);
+        glsl_radix_sort_pass(gl_context, ctx, input_buffer, temporary_radix_buffer, ping_pong_buffer, num_elements, i);
         gl_context->glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         input_buffer = ping_pong_buffer;
         GLuint tmp = ping_pong_buffer;

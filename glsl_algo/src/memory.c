@@ -3,14 +3,14 @@
 #include <stdio.h>
 
 void glsl_memory_set_to_zero(const glsl_algo_gl_context *gl,
-                             const glsl_algo_context *ctx,
+                             const glsl_algo_memory_context *ctx,
                              GLuint output_buffer, 
                              unsigned int num_elements,
                              unsigned int elements_per_thread)
 {
     assert(elements_per_thread >= 1u);
-    unsigned superScalarNumElements = glsl_algo_get_rw_num_elements(ctx->conf.rw_type);
-    unsigned threadBlockSize = elements_per_thread*superScalarNumElements*ctx->conf.local_block_size;
+    unsigned superScalarNumElements = glsl_algo_get_rw_num_elements(ctx->rw_type);
+    unsigned threadBlockSize = elements_per_thread*superScalarNumElements*ctx->local_block_size;
 
     unsigned gridSize = (num_elements + threadBlockSize - 1u) / threadBlockSize;
     unsigned adjustedArraySize = (num_elements + superScalarNumElements - 1u) / superScalarNumElements;
@@ -30,15 +30,15 @@ void glsl_memory_set_to_zero(const glsl_algo_gl_context *gl,
 }
 
 void glsl_copy_memory(const glsl_algo_gl_context *gl,
-                      const glsl_algo_context *ctx,
+                      const glsl_algo_memory_context *ctx,
                       GLuint input_buffer, 
                       GLuint output_buffer,
                       unsigned int num_elements,
                       unsigned int elements_per_thread)
 {
     assert(elements_per_thread >= 1u);
-    unsigned superScalarNumElements = glsl_algo_get_rw_num_elements(ctx->conf.rw_type);
-    unsigned threadBlockSize = elements_per_thread*superScalarNumElements*ctx->conf.local_block_size;
+    unsigned superScalarNumElements = glsl_algo_get_rw_num_elements(ctx->rw_type);
+    unsigned threadBlockSize = elements_per_thread*superScalarNumElements*ctx->local_block_size;
 
     unsigned gridSize = (num_elements + threadBlockSize - 1u) / threadBlockSize;
     unsigned adjustedArraySize = (num_elements + superScalarNumElements - 1u) / superScalarNumElements;

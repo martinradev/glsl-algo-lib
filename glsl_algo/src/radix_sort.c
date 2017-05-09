@@ -13,6 +13,7 @@ while (!stopTimerAvailable) {\
      gl->glGetQueryObjectiv(queryObject,\
      GL_QUERY_RESULT_AVAILABLE,\
      &stopTimerAvailable);\
+     break;\
 }\
 GLuint64 elapsedTime;\
 gl->glGetQueryObjectui64v(queryObject, GL_QUERY_RESULT, &elapsedTime);\

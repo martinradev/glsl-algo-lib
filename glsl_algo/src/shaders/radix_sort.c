@@ -20,9 +20,9 @@ layout(binding = 1) buffer OutputBlockArray\n
 	restrict writeonly coherent SCALAR_TYPE outputArray[];\n
 };\n
 
-const uint DSIZE = 1<<RADIX_SIZE;
-const uint C_DSIZE = DSIZE>>1;
-const uint BIT_OFFSET = 16;
+const uint DSIZE = 1<<RADIX_SIZE;\n
+const uint C_DSIZE = max(DSIZE>>2,1);\n
+const uint BIT_OFFSET = 8;\n
 
 shared uint blockWarpScan[C_DSIZE][WARP_SIZE];\n
 shared uint sharedMem[C_DSIZE][BLOCK_SIZE];\n
@@ -71,7 +71,7 @@ void main()\n
 	  for (uint j = 0; j < ELEMENTS_PER_THREAD; ++j)\n
 	  {\n
 		uint idx = READ_INDEX(qq,j);\n
-		val[idx>>1] += 1<<((idx&1)*BIT_OFFSET);\n
+		val[idx>>2] += 1<<((idx&3)*BIT_OFFSET);\n
 	  }\n
 	  ++i;\n
    }\n
@@ -94,8 +94,18 @@ void main()\n
 		{\n
 			for (uint i = 0; i < C_DSIZE; ++i)\n
 			{\n
-				outputArray[gl_WorkGroupID.x+2*i*gl_NumWorkGroups.x] = val[i]&((1<<BIT_OFFSET)-1);\n
-				outputArray[gl_WorkGroupID.x+(2*i+1)*gl_NumWorkGroups.x] = val[i]>>BIT_OFFSET;\n
+				uint v = val[i];\n
+				uint mask = (1<<BIT_OFFSET)-1;\n
+				outputArray[gl_WorkGroupID.x+4*i*gl_NumWorkGroups.x] = v&mask;\n
+				v>>=BIT_OFFSET;\n
+				outputArray[gl_WorkGroupID.x+(4*i+1)*gl_NumWorkGroups.x] = v&mask;\n
+				if((RADIX_SIZE&1) == 0)\n
+				{\n
+				v>>=BIT_OFFSET;\n
+				outputArray[gl_WorkGroupID.x+(4*i+2)*gl_NumWorkGroups.x] = v&mask;\n
+				v>>=BIT_OFFSET;\n
+				outputArray[gl_WorkGroupID.x+(4*i+3)*gl_NumWorkGroups.x] = v&mask;\n
+				}\n
 			}\n
 		}\n
    }\n
